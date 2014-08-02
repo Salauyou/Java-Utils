@@ -1,4 +1,4 @@
-Java-Utils
+Java utils
 ==========
 
 Some useful utilities I use in Java projects.
