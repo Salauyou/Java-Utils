@@ -39,4 +39,10 @@ public class Point {
 		return "x = " + x + "; y = " + y + (accuracy < 0 ? "" : ("; accuracy = " + accuracy));
 	}
 	
+	@Override
+	public boolean equals(Object o){
+		return (o != null && o instanceof Point 
+				&& ((Point)o).getX() == this.x && ((Point)o).getY() == this.y && ((Point)o).getAccuracy() == this.accuracy);
+	}
+	
 }

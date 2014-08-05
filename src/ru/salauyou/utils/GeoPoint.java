@@ -50,12 +50,12 @@ public class GeoPoint {
 		return "lat = " + this.lat + "; lon = " + this.lon + (this.accuracy < 0 ? "" : ("; accuracy = " + this.accuracy));
 	}
 	
+	@Override
+	public boolean equals(Object o){
+		return (o != null && o instanceof GeoPoint 
+				&& ((GeoPoint)o).getLat() == this.lat && ((GeoPoint)o).getLon() == this.lon 
+				&& ((GeoPoint)o).getAccuracy() == this.accuracy);
+	}
 	
-	
-	
-	
-	
-	
-	
-	
+
 }
