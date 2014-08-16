@@ -7,20 +7,21 @@ import java.util.List;
 import java.util.NoSuchElementException;
 
 /**
- * <p>Iterator that generates k-length subsets (subcollections) of given collection.
- * E. g. for source {A, B, C} and k = 2 it will sequentially return {A, B}, {A, C} and {B, C}.
+ * <p>Iterator that generates all <a href="http://en.wikipedia.org/wiki/Combination">k-combinations</a> 
+ * from a given set of n entries. E. g. for source {A, B, C} and k = 2 it will sequentially return {A, B}, {A, C} and {B, C}.
  * The total number of such subsets is determined by binomial coefficient C(n, k).</p> 
- * <p>By default, resulting collection is {@code ArrayList<T>}, so order of elements in resulting
- * collections is kept as in the source collection. In special cases, when you need another implementation 
- * (e. g. {@code TreeSet<T>}) to present results, pass an empty object of needed type to constructor. 
- * This object will be cleaned and filled on every {@code next()} invocation.</p>
+ * <p>Source set is presented as {@code Collection<T>}, result set is presented as {@code Collection<T>},
+ * by default implemented using {@code ArrayList<T>}.
+ * In special cases, when you need another implementation (e. g. {@code TreeSet<T>}) to present results, 
+ * pass an empty object of needed type to constructor. This object will be cleaned and inflated on every 
+ * {@code next()} invocation.</p>
  */
 public class KSubsetIterator<T> implements Iterator<Collection<T>> {
 
 	final private Collection<T> resultCollection;
 	final private List<T> source;
 	final int k, n;
-	private int[] subset; // index subset based on which next() subset will be generated
+	private int[] subset; // indexes of combination's elements in source list
 	private boolean started = false;
 	private boolean hasNext = false;
 	
@@ -28,7 +29,7 @@ public class KSubsetIterator<T> implements Iterator<Collection<T>> {
 	/**
 	 * Default constructor
 	 * 
-	 * @param source collection, which data will be used to generate subsets. On creation, source data
+	 * @param source collection, which data will be used to generate k-combinations. On creation, source data
 	 * are copied into internal collection, so their further changes won't effect the iterator behavior
 	 * @param k
 	 * @throws IllegalArgumentException if {@code k < 1} or {@code k > source.size()}
@@ -41,7 +42,7 @@ public class KSubsetIterator<T> implements Iterator<Collection<T>> {
 	/**
 	 * Constructor that determines special type of collection for results
 	 * 
-	 * @param source	collection, which data will be used to generate subsets. On creation, source data
+	 * @param source	collection, which data will be used to generate k-combinations. On creation, source data
 	 * are copied into internal collection, so their further changes won't effect the iterator behavior
 	 * @param resultCollection	object which will be used to return results on every {@code next()} invocation 
 	 * @param k	
