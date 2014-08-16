@@ -3,9 +3,12 @@ Java utils
 
 Some useful utilities I use in Java projects.
 
-**ExpirableHashMap** class - safe `Map<K, V>` implementation, based on `HashMap`, where every entry has an expiration time measured from the moment the entry was added. Each time you read an entry, if the map returns it, it is guaranteed that such entry is not expired yet.
-Expiration management is implemented with internal `LinkedList` and is performed automatically on write/read operations, without need of additional watcher threads.
+**ExpirableMap** class - Thread-safe `Map<K, V>` decorator, where every entry has specified expiration time 
+which is measured from the moment the entry was added. Clean-up of expired elements is performed automatically 
+on every write/read invocation, so it is guaranteed that no expired entries will be returned by `get(key)` method.
+Expiration management is implemented based on internal `LinkedList` and don't utilize any additional threads.
 
-**Point**, **GeoPoint** immutable classes present points in 2d cartesian and geo coordinates, **GeoProjections** class purpose is to convert such points one to another. 
+**Point**, **GeoPoint** immutable classes present points in 2d cartesian and geo coordinates, 
+**GeoProjections** class purpose is to convert such points one to another. 
 
 **GeoCalculations** - class to perform some calculations in geo coordinates.
