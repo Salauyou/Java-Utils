@@ -1,7 +1,6 @@
 package ru.salauyou.utils;
 
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -11,16 +10,18 @@ import java.util.Set;
 
 
 /**
- * Implementation of {@code Map} interface, where every entry has specified expiration time. 
- * Clean-up is performed automatically on every write/read invocation.
+ * Thread-safe {@code Map<K, V>} decorator, where every entry has specified expiration time. 
+ * Clean-up of expired elements is performed automatically on every write/read invocation, 
+ * so it is guaranteed that no expired entries will be returned by {@code get(key)} method.
  * 
- * Internal map containing data is implemented based on {@code HashMap<K, V>} class.
+ * Complexities of operations are similar to such in used base map, except {@code put(key, value, lifetime)} 
+ * and {@code remove(key)}, that are at least O(n).
  * 
  * @param <K>	key type
  * @param <V>	value type
  */
 
-public class ExpirableHashMap<K, V> implements Map<K, V> {
+public class ExpirableMap<K, V> implements Map<K, V> {
 
 	class ExpirationEntry {
 		final K key;
@@ -32,8 +33,8 @@ public class ExpirableHashMap<K, V> implements Map<K, V> {
 		}
 	}
 	
-	private Map<K, V> data;
-	private long defaultLifetime;
+	final private Map<K, V> data;
+	final private long defaultLifetime;
 	
 	// list of keys sorted by expiration time (closer to head -> sooner expiration)
 	private List<ExpirationEntry> expirationTimes; 
@@ -57,12 +58,17 @@ public class ExpirableHashMap<K, V> implements Map<K, V> {
 
 	//==============================================================
 	
+
 	/**
-	 * Creates an empty map with given default lifetime 
-	 * @param defaultLifetime default lifetime in ms
+	 * Creates ExpirableMap and setups default lifetime for entries that will be added further
+	 * 
+	 * @param baseMap	Map on which ExpirableMap is based on. All entries that it contains at the moment
+	 * of ExpirableMap creation are treated as having no lifetime (i. e. existing forever until being 
+	 * explicitly removed). After ExpirableMap creation, it is not recommended to access baseMap directly
+	 * @param defaultLifetime	default lifetime in ms
 	 */
-	public ExpirableHashMap(long defaultLifetime){
-		data = new HashMap<K, V>();
+	public ExpirableMap(Map<K, V> baseMap, long defaultLifetime){
+		data = baseMap;
 		expirationTimes = new LinkedList<ExpirationEntry>();
 		this.defaultLifetime = defaultLifetime;
 	}
@@ -159,18 +165,24 @@ public class ExpirableHashMap<K, V> implements Map<K, V> {
 		}
 	}
 	
+	/**
+	 * Removes (K, V) entry from the Map as specified in Map interface. Since internal 
+	 * expiration entry should be removed as well, it requires at least O(n) complexity.
+	 */
 	@Override
 	public V remove(Object key) {
 		synchronized (this){
 			cleanUp();
-			// searching corresponding expiration entry and remove it
-			ListIterator<ExpirationEntry> i = expirationTimes.listIterator();
-			int index = 0;
-			while (i.hasNext() && !i.next().key.equals(key))
-				index++;
-			if (index < expirationTimes.size() && expirationTimes.get(index).key.equals(key))
-				expirationTimes.remove(i);
-			
+			// searching corresponding expiration entry to remove it together with data entry
+			Iterator<ExpirationEntry> i = expirationTimes.iterator();
+			ExpirationEntry e;
+			while (i.hasNext()){
+				e = i.next();
+				if (e.key.equals(key)){
+					i.remove();
+					return data.remove(key);
+				}
+			}
 			return data.remove(key);
 		}
 	}
