@@ -8,7 +8,7 @@ which is measured from the moment the entry was put to the map. Clean-up of expi
 on every write/read invocation, so it is guaranteed that no expired entries will be returned by `get(key)` method.
 Expiration management is implemented based on internal `LinkedList` and don't utilize any additional threads.
 
-**KSubsetIterator** - `Iterator` that sequentially returns all <a href="http://en.wikipedia.org/wiki/Combination">k-combinations</a> from given `Collection<T>`
+**KCombinationIterator** - `Iterator` that sequentially returns all <a href="http://en.wikipedia.org/wiki/Combination">k-combinations</a> from given `Collection<T>`
 
 **Point**, **GeoPoint** immutable classes present points in 2d cartesian and geo coordinates, 
 **GeoProjections** class purpose is to convert such points one to another using some projection model. 

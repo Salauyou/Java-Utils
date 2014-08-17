@@ -8,34 +8,32 @@ import java.util.NoSuchElementException;
 
 /**
  * <p>Iterator that generates all <a href="http://en.wikipedia.org/wiki/Combination">k-combinations</a> 
- * from a given set of n entries. E. g. for source {A, B, C} and k = 2 it will sequentially return {A, B}, {A, C} and {B, C}.
- * The total number of such subsets is determined by binomial coefficient C(n, k).</p> 
- * <p>Source set is presented as {@code Collection<T>}, result set is presented as {@code Collection<T>},
- * by default implemented using {@code ArrayList<T>}.
- * In special cases, when you need another implementation (e. g. {@code TreeSet<T>}) to present results, 
- * pass an empty object of needed type to constructor. This object will be cleaned and inflated on every 
- * {@code next()} invocation.</p>
+ * from a given set (or list) of n entries. E. g. for source {A, B, C} and k = 2 it will sequentially return {A, B}, {A, C} and {B, C}.
+ * The total number of combinations is determined by binomial coefficient C(n, k).</p> 
+ * <p>Source set is presented as {@code Collection<T>}, result set is presented as {@code Collection<T>}.
+ * By default, result object is implemented using {@code ArrayList<T>} and is reused on every {@code next()} invocation. 
+ * If you need another implementation (e. g. {@code TreeSet<T>}) to present results, use 4-parameter constructor.
  */
-public class KSubsetIterator<T> implements Iterator<Collection<T>> {
+public class KCombinationIterator<T> implements Iterator<Collection<T>> {
 
 	final private Collection<T> resultCollection;
 	final private List<T> source;
 	final int k, n;
-	private int[] subset; // indexes of combination's elements in source list
+	final private int[] subset; // indexes of combination's elements in source list
 	private boolean started = false;
 	private boolean hasNext = false;
-	
+	final private boolean createNewInstances;
 	
 	/**
 	 * Default constructor
 	 * 
-	 * @param source collection, which data will be used to generate k-combinations. On creation, source data
+	 * @param source	collection, which data will be used to generate k-combinations. On creation, source data
 	 * are copied into internal collection, so their further changes won't effect the iterator behavior
 	 * @param k
 	 * @throws IllegalArgumentException if {@code k < 1} or {@code k > source.size()}
 	 */
-	public KSubsetIterator(Collection<T> source, int k){
-		this(source, null, k);
+	public KCombinationIterator(Collection<T> source, int k){
+		this(source, k, new ArrayList<T>(), false);
 	}
 	
 	
@@ -44,11 +42,13 @@ public class KSubsetIterator<T> implements Iterator<Collection<T>> {
 	 * 
 	 * @param source	collection, which data will be used to generate k-combinations. On creation, source data
 	 * are copied into internal collection, so their further changes won't effect the iterator behavior
-	 * @param resultCollection	object which will be used to return results on every {@code next()} invocation 
 	 * @param k	
+	 * @param resultCollection		object that will be used to return results invocation 
+	 * @param createNewInstances	if {@code true}, a new instance of result object will be created on every {@code next()} invocation.
+	 * Otherwise, one object that was passed as {@code resultCollection} parameter will be reused.
 	 * @throws IllegalArgumentException if {@code k < 1} or {@code k > source.size()}
 	 */
-	public KSubsetIterator(Collection<T> source, Collection<T> resultCollection, int k) {
+	public KCombinationIterator(Collection<T> source,  int k, Collection<T> resultCollection, boolean createNewInstances) {
 		if (k < 1)
 			throw new IllegalArgumentException("k cannot be less than 1");
 		if (k > source.size())
@@ -58,6 +58,7 @@ public class KSubsetIterator<T> implements Iterator<Collection<T>> {
 		this.k = k;
 		this.n = source.size();
 		this.resultCollection = resultCollection;
+		this.createNewInstances = createNewInstances;
 		subset = new int[k];
 	}
 	
@@ -90,16 +91,23 @@ public class KSubsetIterator<T> implements Iterator<Collection<T>> {
 	}
 
 	
+	@SuppressWarnings("unchecked")
 	@Override
 	public Collection<T> next() {
 		if (!hasNext)
 			throw new NoSuchElementException("No more subsets can be generated");
 		Collection<T> result;
-		if (resultCollection != null){
-			resultCollection.clear();
+		if (createNewInstances){
+			try {
+				result = resultCollection.getClass().newInstance();
+			} catch (InstantiationException | IllegalAccessException e) {
+				e.printStackTrace();
+				return null;
+			}
+		} else {
 			result = resultCollection;
-		} else
-			result = new ArrayList<T>(k);
+			result.clear();
+		}
 		for (int i = 0; i < k; i++)
 			result.add(source.get(subset[i]));
 		return result;
