@@ -8,12 +8,12 @@ import java.util.NoSuchElementException;
 
 /**
  * <p>Iterator that generates all <a href="http://en.wikipedia.org/wiki/Combination">k-combinations</a> 
- * from a given set (or list) of n entries. E. g. for source {A, B, C} and k = 2 it will sequentially 
- * return {A, B}, {A, C} and {B, C}. The total number of combinations is determined by binomial 
+ * from a given {@code Collection<T>} of n entries. E. g. for source [foo, bar, baz] and k = 2 it will sequentially 
+ * return [foo, bar], [foo, baz] and [bar, baz]. The total number of combinations is determined by binomial 
  * coefficient C(n, k).</p> 
- * <p>Source set is presented as {@code Collection<T>}, result set is presented as {@code Collection<T>}.
- * By default, result object is implemented using {@code ArrayList<T>}. If another implementation 
- * (e. g. {@code TreeSet<T>}) is required, use 3-parameter constructor.
+ * <p>Results are returned as {@code Collection<T>}, implemented using {@code ArrayList<T>} by default. 
+ * If another implementation (e. g. {@code TreeSet<T>}) is required, use 3-parameter constructor.</p>
+ * <p>To iterate over k-combinations inside a for-each loop, use static {@code decorateForEach()} decorator.</p>
  */
 public class KCombinationIterator<T> implements Iterator<Collection<T>> {
 
@@ -122,7 +122,7 @@ public class KCombinationIterator<T> implements Iterator<Collection<T>> {
 	 * <p>Decorator which allows to iterate over all k-combinations of given collection using for-each loop</p>
 	 * <p>For example:</p>
 	 * <pre>
-	 * List&lt;String&gt; source = new ArrayList&lt;String&gt;(Arrays.asList(new String[]{"foo", "bar", "baz"}));
+	 * Collection&lt;String&gt; source = Arrays.asList(new String[]{"foo", "bar", "baz"});
 	 * for (Collection&lt;String&gt; c : KCombinationIterator.decorateForEach(source, 2))
 	 *     System.out.println(c);</pre>
 	 * <p>will produce:</p>
