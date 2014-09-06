@@ -23,6 +23,7 @@ public class KCombinationIterator<T> implements Iterator<Collection<T>> {
 	final private int[] subset; // indexes of combination's elements in source list
 	private boolean started = false;
 	private boolean hasNext = false;
+	private boolean hasNextCalled = false;
 	
 	/**
 	 * Default constructor
@@ -62,6 +63,11 @@ public class KCombinationIterator<T> implements Iterator<Collection<T>> {
 
 	@Override
 	public boolean hasNext() {
+		// check if hasNext was called before to follow idempotency
+		if (hasNextCalled)
+			return hasNext;
+		
+		hasNextCalled = true;
 		if (n == 0)
 			return false;
 		if (!started){
@@ -91,6 +97,7 @@ public class KCombinationIterator<T> implements Iterator<Collection<T>> {
 	@SuppressWarnings("unchecked")
 	@Override
 	public Collection<T> next() {
+		hasNextCalled = false;
 		if (!hasNext)
 			throw new NoSuchElementException("No more subsets can be generated");
 		Collection<T> result;
