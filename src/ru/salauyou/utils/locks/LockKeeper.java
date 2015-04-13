@@ -7,12 +7,11 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Queue;
-import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.LockSupport;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -39,7 +38,9 @@ public final class LockKeeper {
 	private final int mask;
 	private final Map<Class<?>, ReadWriteLock[]> lockStorage = new HashMap<>();
 	private final ReadWriteLock[] objectLockStorage;
-	private final Queue<Thread> waiters = new ConcurrentLinkedQueue<>();
+	private AtomicInteger waiters = new AtomicInteger(0);
+	private AtomicInteger cycle = new AtomicInteger(0);
+	private Semaphore waitingSemaphore;
 	private boolean classed;
 	
 
@@ -80,6 +81,7 @@ public final class LockKeeper {
 			objectLockStorage[i] = new ReentrantReadWriteLock();
 		}
 		classed = true;
+		waitingSemaphore = new Semaphore(0, true);
 	}
 
 	
@@ -100,8 +102,9 @@ public final class LockKeeper {
 	
 	/**
 	 * Returns a composite lock in which locks for all given objects are acquired
+	 * @throws InterruptedException 
 	 */
-	public Lock lockAndGet(Collection<? extends Object> objects, LockType lockType) {
+	public Lock lockAndGet(Collection<? extends Object> objects, LockType lockType) throws InterruptedException {
 		if (objects.isEmpty())
 			return new CompositeLock(this, Collections.emptyList());
 		
@@ -115,6 +118,8 @@ public final class LockKeeper {
 		}
 		
 		boolean available;
+		boolean notify = true;
+		waiters.incrementAndGet();
 		do {
 			available = true;
 			for (Lock lock : locks) {
@@ -124,17 +129,19 @@ public final class LockKeeper {
 					for (Lock lo : result) {
 						lo.unlock();
 					}
+					if (notify) {
+						notifyWaiters(false);
+					}
 					available = false;
 					result.clear();
 					break;
 				}
 			}
 			if (!available) {
-				waiters.add(Thread.currentThread());
-				LockSupport.parkNanos(1_000_000L); // retry after 1 ms
+				notify = waitingSemaphore.tryAcquire(1, TimeUnit.MILLISECONDS);
 			}
 		} while (!available);
-		notifyWaiters();
+		waiters.decrementAndGet();
 		return new CompositeLock(this, result);
 	}
 	
@@ -154,8 +161,13 @@ public final class LockKeeper {
 	
 	
 
-	private void notifyWaiters() {
-		LockSupport.unpark(waiters.poll());
+	private synchronized void notifyWaiters(boolean allWaiters) {
+		if (allWaiters) {
+			cycle.set(waiters.get());
+		} 
+		if (cycle.decrementAndGet() >= 0) {
+			waitingSemaphore.release();
+		}
 	}
 	
 	
@@ -205,7 +217,7 @@ public final class LockKeeper {
 			for (Lock lock : locks) {
 				lock.unlock();
 			}
-			keeper.notifyWaiters();
+			keeper.notifyWaiters(true);
 		}
 
 		@Override
