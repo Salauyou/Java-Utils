@@ -118,7 +118,7 @@ public final class LockKeeper {
 		}
 		
 		boolean available;
-		boolean notify = true;
+		boolean notify = false;
 		waiters.incrementAndGet();
 		do {
 			available = true;
