@@ -237,7 +237,7 @@ public final class QueuedLockKeeper {
 		private final List<Lock> locks;
 		private final QueuedLockKeeper keeper;
 		
-		public CompositeLock(List<Lock> locks, QueuedLockKeeper lockKeeper) {
+		CompositeLock(List<Lock> locks, QueuedLockKeeper lockKeeper) {
 			this.locks = locks;
 			this.keeper = lockKeeper;
 		}
