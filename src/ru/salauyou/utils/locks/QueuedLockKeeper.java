@@ -5,9 +5,9 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
@@ -43,7 +43,7 @@ public final class QueuedLockKeeper {
 	private boolean classed;
 	
 	final Lock queueLock = new ReentrantLock();
-	final Queue<Waiter> waiters = new PriorityQueue<>();
+	final Queue<Waiter> waiters = new LinkedList<>();
 
 	
 	/**
@@ -175,7 +175,6 @@ public final class QueuedLockKeeper {
 	private List<Waiter> newWaiters = new ArrayList<>();
 	
 	private void makeRound() {
-		long now = System.currentTimeMillis();
 		queueLock.lock();
 		Waiter w = null;
 		while ((w = waiters.poll()) != null) {
@@ -187,7 +186,6 @@ public final class QueuedLockKeeper {
 					w.acquired = true;
 				}
 				if (!w.acquired) {
-					w.waitingTime = now - w.timestamp;
 					newWaiters.add(w);
 				}
 			}
@@ -202,23 +200,13 @@ public final class QueuedLockKeeper {
 	/** ==================================================== **/
 	
 	
-	static class Waiter implements Comparable<Waiter> {
+	static class Waiter {
 
-		final long timestamp;
 		final Semaphore semIn = new Semaphore(0);
 		final Semaphore semOut = new Semaphore(0);
-		volatile long waitingTime = 0;
 		volatile boolean acquired = false;
 		
-		Waiter() {
-			timestamp = System.currentTimeMillis();
-		}
-		
-		@Override
-		public int compareTo(Waiter w) {
-			return w.waitingTime == this.waitingTime ? 0 
-				   : (w.waitingTime > this.waitingTime ? 1 : -1);
-		}
+		Waiter() { }
 	}
 	
 	
