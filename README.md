@@ -3,7 +3,7 @@ Java utils
 
 Some useful utilities I use in Java projects.
 
-**LockKeeper** - hash-based segment locking implementation. Allows to acquire one composite lock for multiple objects atomically. It is ***resistant to order*** (order of objects passed can be any), ***fair*** (threads that wait most are first candidates to acquire locks) and implements ***all-or-none*** strategy (which allows other waiter threads continue as soon as all needed locks become available).
+**LockKeeper** - hash-based segment locking implementation. Allows to acquire one composite lock for multiple objects atomically. It is ***resistant to order*** (order of objects passed can be any), ***fair*** (threads that wait most are first candidates to acquire locks) and implements ***all-or-nothing*** strategy (which allows other waiter threads continue as soon as all needed locks become available).
 
 <pre>
 Lock lock = lockKeeper.lockAndGet(Arrays.asList(o1, o2, o3));
