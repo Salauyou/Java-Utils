@@ -11,7 +11,7 @@ Lock lock = lockKeeper.lockAndGet(Arrays.asList(o1, o2, o3)); // blocks until lo
 try {
     // do some work on objects o1, o2 and o3
 } finally {
-    lock.release();
+    lock.unlock();                                            // releases locks for all o1, o2 and o3
 }</pre>
 
 **ExpirableMap** - Thread-safe `Map<K, V>` decorator, where every entry has specified expiration time 
