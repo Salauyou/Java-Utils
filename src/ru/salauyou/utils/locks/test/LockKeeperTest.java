@@ -1,10 +1,9 @@
 package ru.salauyou.locks.test;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertTrue;
 
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.ExecutionException;
@@ -36,7 +35,7 @@ public class LockKeeperTest {
 	@Test(timeout = 80000)
 	public void testLocks() {
 		
-		LockKeeper lockKeeper = new LockKeeper(Arrays.asList(Bank.class, Subject.class, Payment.class), 10);
+		LockKeeper lockKeeper = new LockKeeper(10, Bank.class, Subject.class, Payment.class);
 		
 		Random rnd = new Random();
 		StatsBuilder<Integer> sb = new StatsBuilder<>();
@@ -67,13 +66,13 @@ public class LockKeeperTest {
 			payments.forEach(p -> {
 				tasks.add(es.submit(() -> {
 					long timeStart = System.nanoTime();
-					Lock lock = lockKeeper.lockAndGet(Arrays.asList(
+					Lock lock = lockKeeper.lockAndGet(
+							rnd.nextDouble() < (ii * 0.2d) ? LockKeeper.LockType.WRITE : LockKeeper.LockType.READ,
 							p, 
 							p.getPayer(), 
 							p.getReceiver(), 
 							p.getPayer().getBank(), 
-							p.getReceiver().getBank()), 
-							rnd.nextDouble() < (ii * 0.2d) ? LockKeeper.LockType.WRITE : LockKeeper.LockType.READ
+							p.getReceiver().getBank()
 							);
 					sb.put((int) ((System.nanoTime() - timeStart) / 1000000));
 					if (rnd.nextDouble() < 0.001) {

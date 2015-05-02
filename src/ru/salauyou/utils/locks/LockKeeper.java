@@ -52,7 +52,7 @@ public final class LockKeeper {
 	 * Creates new <tt>LockKeeper</tt> for <tt>Object</tt> type with 1024 segments
 	 */
 	public LockKeeper() {
-		this(Collections.emptyList(), 10);
+		this(10);
 		classed = false;
 	}
 	
@@ -61,14 +61,15 @@ public final class LockKeeper {
 	/**
 	 * Creates new <tt>LockKeeper</tt> for given types and number of segments
 	 * 
-	 * @param classes		classes that are supposed to be used (LockKeeper 
-	 * 						will create separate lock set for every class from 
-	 * 						the list, and one common set for rest)
-	 * @param segmentPower	power of 2 base of desired segment number 
-	 * 						(i. e. <tt>segmentPower</tt> = 10 
-	 * 						means that 1024 segments will be created)
+	
+	 * @param segmentPower  power of 2 base of desired segment number 
+	 *                      (i. e. <tt>segmentPower</tt> = 10 
+	 *                      means that 1024 segments will be created)
+	 * @param classes       classes that are supposed to be used (LockKeeper 
+	 *                      will create separate lock set for every class from 
+	 *                      the list, and one common set for rest)
 	 */
-	public LockKeeper(Collection<Class<?>> classes, int segmentPower) {
+	public LockKeeper(int segmentPower, Class<?>... classes) {
 		mask = (1 << segmentPower) - 1;
 		for (Class<?> clazz : classes) {
 			if (clazz != null) {
@@ -89,9 +90,18 @@ public final class LockKeeper {
 	
 	
 	/**
+	 * Returns exclusive (write) in a locked state for given object
+	 */
+	public Lock lockAndGet(Object o) throws InterruptedException {
+		return lockAndGet(LockType.WRITE, o);
+	}
+	
+	
+	
+	/**
 	 * Returns a lock in locked state for given object
 	 */
-	public Lock lockAndGet(Object o, LockType lockType) throws InterruptedException {
+	public Lock lockAndGet(LockType lockType, Object o) throws InterruptedException {
 		if (o != null) {
 			ReadWriteLock lock = forObject(o);
 			Lock lo = lockType == LockType.READ ? lock.readLock() : lock.writeLock();
@@ -104,15 +114,34 @@ public final class LockKeeper {
 	
 	
 	/**
-	 * Returns a composite lock in which locks for all given objects are acquired
-	 * @throws InterruptedException 
+	 * Returns a composite exclusive (write) lock in which locks 
+	 * for all given objects are acquired
 	 */
-	public Lock lockAndGet(Collection<? extends Object> objects, LockType lockType) 
-			                                          throws InterruptedException {
-		if (objects.isEmpty())
+	public Lock lockAndGet(Object... objects) throws InterruptedException {
+		return lockAndGet(LockType.WRITE, objects);
+	}
+	
+	
+	
+	/**
+	 * Returns a composite lock in which locks for all given objects are acquired
+	 */
+	public Lock lockAndGet(LockType lockType, Collection<? extends Object> objects)
+														throws InterruptedException {
+		return lockAndGet(lockType, objects.toArray());
+	}
+	
+	
+	
+	/**
+	 * Returns a composite lock in which locks for all given objects are acquired
+	 */
+	public Lock lockAndGet(LockType lockType, Object... objects) 
+			                                            throws InterruptedException {
+		if (objects.length == 0)
 			return new CompositeLock(Collections.emptyList(), lockType, this);
 		
-		List<ReentrantReadWriteLock> locks = new ArrayList<>(objects.size());
+		List<ReentrantReadWriteLock> locks = new ArrayList<>(objects.length);
 		
 		for (Object o : objects) {
 			if (o != null) {
@@ -146,6 +175,8 @@ public final class LockKeeper {
 	
 	
 	
+	// private stuff //
+	
 	private ReentrantReadWriteLock forObject(Object o) {
 		ReentrantReadWriteLock[] ls = null;
 		if (classed) {
@@ -159,10 +190,10 @@ public final class LockKeeper {
 	
 	
 	/**
-	 * @return	1 - all locks acquired
-	 * 			0 - all locks were free at the beginning,
+	 * @return  1 - all locks acquired
+	 *          0 - all locks were free at the beginning,
 	 *              but failed to acquire
-	 * 		 (-x) - number of locks unable to acquire
+	 *       (-x) - number of locks unable to acquire
 	 */
 	private int tryAllLocks(List<ReentrantReadWriteLock> locks, LockType type) {
 		int x = 0;
