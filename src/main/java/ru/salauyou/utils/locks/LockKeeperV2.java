@@ -1,4 +1,4 @@
-package ru.salauyou.locks;
+package ru.salauyou.utils.locks;
 
 import static java.lang.Thread.currentThread;
 
@@ -17,9 +17,9 @@ import java.util.concurrent.atomic.AtomicIntegerArray;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.LockSupport;
 
-import ru.salauyou.locks.LockKeeper.LockType;
-import sun.misc.Unsafe;
+import ru.salauyou.utils.locks.LockKeeper.LockType;
 
 /**
  * Version 2 of {@link LockKeeper}, adopted to highly concurrent 
@@ -51,10 +51,7 @@ public class LockKeeperV2 {
     final int mask;
     final AtomicIntegerArray stripes;
     final Queue<Waiter> waiters = new ConcurrentLinkedQueue<>();
-    final Map<Class<?>, Integer> shiftsForClasses;
-    
-    final static Unsafe U = UnsafeUtil.getUnsafe();
-    
+    final Map<Class<?>, Integer> shiftsForClasses;   
     
     
     /**
@@ -109,21 +106,21 @@ public class LockKeeperV2 {
     public Lock lockAndGet(LockType lockType, Object... objects) 
                                               throws InterruptedException {
         int[] locks = collectLocks(objects);
-        Thread t = tryGetLocks(locks);
+        Thread t = tryGetLocks(locks, false);
         if (t == null)
             return new CompositeLock(locks, LockType.WRITE);
         else {
             Waiter w = new Waiter(t, locks);
             waiters.add(w);
-            for (;;) {
-                U.park(false, 0);
-                if (currentThread().isInterrupted()) 
-                    // TODO: release obtained locks
+            LockSupport.park();
+            while (!w.allAcquired) {
+                LockSupport.park();
+                if (currentThread().isInterrupted())
+                    // TODO: release locks if any are held
                     throw new InterruptedException();
-                if (w.allAcquired)
-                    return new CompositeLock(locks, LockType.WRITE);
             }
-        }        
+            return new CompositeLock(locks, LockType.WRITE);
+        }   
     }
     
     
@@ -154,7 +151,7 @@ public class LockKeeperV2 {
     
     
     
-    Thread tryGetLocks(final int[] locks) {       
+    Thread tryGetLocks(final int[] locks, boolean precheck) {       
         // acquision of locks is performed in two stages:
         // 1) reservation stage, where each lock is "reserved",
         //    then tested if it can be acquired. This is a place 
@@ -167,6 +164,14 @@ public class LockKeeperV2 {
         //    and a current thread is returned;
         // 2) acquision stage, where locks are marked acquired
         //    and reservation marks are cleared. 
+        
+        // pre-check
+        if (precheck) {
+            for (int lo : locks) {
+                if (isWriteLocked(stripes.get(lo)))
+                    return currentThread();
+            }
+        }
         
         // reserved locks
         final List<Integer> res = new ArrayList<>(locks.length);
@@ -205,9 +210,9 @@ public class LockKeeperV2 {
             long c = opCounter.get();
             Waiter w;
             while ((w = waiters.poll()) != null) {
-                if (tryGetLocks(w.locks) == null) {
+                if (tryGetLocks(w.locks, true) == null) {
                     w.allAcquired = true;
-                    U.unpark(w.th);
+                    LockSupport.unpark(w.th);
                 } else
                     newWaiters.add(w);
             }

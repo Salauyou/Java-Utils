@@ -1,4 +1,5 @@
-package ru.salauyou.locks.test;
+package locks;
+import static org.junit.Assert.assertTrue;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -13,11 +14,11 @@ import java.util.concurrent.locks.Lock;
 
 import org.junit.Test;
 
-import ru.salauyou.locks.LockKeeper;
-import ru.salauyou.locks.LockKeeperV2;
-import ru.salauyou.locks.test.Model.Bank;
-import ru.salauyou.locks.test.Model.Payment;
-import ru.salauyou.locks.test.Model.Subject;
+import locks.Model.Bank;
+import locks.Model.Payment;
+import locks.Model.Subject;
+import ru.salauyou.utils.StatsBuilder;
+import ru.salauyou.utils.locks.LockKeeper;
 
 
 public class LockKeeperTest {
@@ -31,10 +32,10 @@ public class LockKeeperTest {
     
     static final double[] timeLimits = new double[]{6, 12, 15, 20, 25};
     
-    @Test //(timeout = 80000)
+    @Test(timeout = 80000)
     public void testLocks() {
         
-        LockKeeperV2 lockKeeper = new LockKeeperV2(10, Bank.class, Subject.class, Payment.class);
+        LockKeeper lockKeeper = new LockKeeper(10, Bank.class, Subject.class, Payment.class);
         
         Random rnd = new Random();
         StatsBuilder<Integer> sb = new StatsBuilder<>();
@@ -52,27 +53,24 @@ public class LockKeeperTest {
             receivers.add(generateSubject(rnd, banks));
         for (int i = 0; i < PAYMENTS; i++) 
             payments.add(generatePayment(rnd, payers, receivers));
-                
+        
         List<Future<Void>> tasks = new ArrayList<>();
         ExecutorService es = Executors.newFixedThreadPool(THREADS);
-        
+            
         for (int i = 0; i < 5; i++) {
             final int ii = i;
             payments.forEach(p -> {
                 tasks.add(es.submit(() -> {
                     long timeStart = System.nanoTime();
                     Lock lock = lockKeeper.lockAndGet(
-                            LockKeeper.LockType.WRITE,
-                            /*rnd.nextDouble() < (ii * 0.2d) 
-                                    ? LockKeeper.LockType.WRITE 
-                                    : LockKeeper.LockType.READ,*/
+                            rnd.nextDouble() < (ii * 0.2d) ? LockKeeper.LockType.WRITE : LockKeeper.LockType.READ,
                             p, 
                             p.getPayer(), 
                             p.getReceiver(), 
                             p.getPayer().getBank(), 
                             p.getReceiver().getBank()
                             );
-                    sb.put((int) ((System.nanoTime() - timeStart) / 1E6));
+                    sb.put((int) ((System.nanoTime() - timeStart) / 1000000));
                     if (rnd.nextDouble() < 0.001) {
                         System.out.println("Locks acquired for: " + p);
                     }
@@ -94,7 +92,7 @@ public class LockKeeperTest {
             double time = (System.currentTimeMillis() - timeStart) / 1000d;
             System.out.println(String.format("Executed in %s s.", time));
             System.out.println(sb.percentilesToString(new double[] { 0, 25, 50, 75, 85, 90, 95, 99, 100 }));
-//            assertTrue(time < timeLimits[i]);
+            assertTrue(time < timeLimits[i]);
         }
         es.shutdownNow();
     }

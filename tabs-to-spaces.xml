@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<project name="java-from-xsd" default="generate">
+	
+	<property name="MAIN_FOLDER" value="src" />
+	
+	<target name="generate">
+		<replaceregexp match="\t" replace="    " flags="gm" encoding="UTF-8">
+			<fileset dir="${MAIN_FOLDER}">
+				<include name="*/*.java" />
+				<include name="*/*/*.java" />
+				<include name="*/*/*/*.java" />
+				<include name="*/*/*/*/*.java" />
+				<include name="*/*/*/*/*/*.java" />
+				<include name="*/*/*/*/*/*/*.java" />
+				<include name="*/*/*/*/*/*/*/*.java" />
+				<include name="*/*/*/*/*/*/*/*/*.java" />
+			</fileset>
+		</replaceregexp>
+	</target>
+
+</project>
