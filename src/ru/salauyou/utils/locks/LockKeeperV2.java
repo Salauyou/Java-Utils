@@ -128,6 +128,32 @@ public class LockKeeperV2 {
     
     
     
+    // ------------------ private stuff ---------------------- //
+    
+    
+    
+    int[] collectLocks(Object... os) {
+        Set<Integer> pos = new HashSet<>();
+        for (Object o : os) 
+            pos.add(stripeForObject(o));
+        int[] ps = new int[pos.size()];
+        int i = 0;
+        for (Integer p : pos)
+            ps[i++] = p;
+        Arrays.sort(ps);    // avoid deadlocking in `tryAllLocks`
+        return ps;
+    }
+    
+    
+    
+    int stripeForObject(Object o) {
+        int shift = shiftsForClasses == null 
+              ? 0 : shiftsForClasses.getOrDefault(o.getClass(), 0);
+        return shift + (o.hashCode() & mask);
+    } 
+    
+    
+    
     Thread tryGetLocks(final int[] locks) {       
         // acquision of locks is performed in two stages:
         // 1) reservation stage, where each lock is "reserved",
@@ -164,34 +190,8 @@ public class LockKeeperV2 {
         return null;
     }
     
-    
-    
-    /**
-     * Collect stripe numbers
-     */
-    int[] collectLocks(Object... os) {
-        Set<Integer> pos = new HashSet<>();
-        for (Object o : os) 
-            pos.add(stripeForObject(o));
-        int[] ps = new int[pos.size()];
-        int i = 0;
-        for (Integer p : pos)
-            ps[i++] = p;
-        Arrays.sort(ps);    // avoid deadlocking in `tryAllLocks`
-        return ps;
-    }
-    
-    
-    
-    // ------------------ private stuff ---------------------- //
-    
-    int stripeForObject(Object o) {
-        int shift = shiftsForClasses == null 
-              ? 0 : shiftsForClasses.getOrDefault(o.getClass(), 0);
-        return shift + (o.hashCode() & mask);
-    }  
-    
    
+    
     final AtomicBoolean queueLock = new AtomicBoolean();  // synchronizer for `tryUnlockWaiters` 
     final AtomicLong opCounter = new AtomicLong();        // operation counter
     final List<Waiter> newWaiters = new ArrayList<>();
@@ -199,10 +199,9 @@ public class LockKeeperV2 {
     
     void tryUnlockWaiters() {
         opCounter.incrementAndGet();
-        if (!queueLock.compareAndSet(false, true))
-            return;
-        
         for (;;) {
+            if (!queueLock.compareAndSet(false, true))
+                return;
             long c = opCounter.get();
             Waiter w;
             while ((w = waiters.poll()) != null) {
@@ -213,34 +212,21 @@ public class LockKeeperV2 {
                     newWaiters.add(w);
             }
             waiters.addAll(newWaiters);
-            newWaiters.clear();
+            newWaiters.clear();            
+            queueLock.set(false);
             
             // return only if no unlocks occurred
             // during queue traversal
-            if (opCounter.get() == c) {
-                queueLock.set(false);
+            if (opCounter.get() == c) 
                 return;
-            }
         }
-        
     }
        
     
-    public static class Waiter {
-        
-        volatile boolean allAcquired = false;
-        final Thread th;
-        final int[] locks;
-        
-        Waiter(final Thread th, final int[] locks) {
-            this.th = th;
-            this.locks = locks;
-        }
-    }
-    
-    
+
     static final int RESERVED_BIT     = 1 << 30;
     static final int WRITE_LOCKED_BIT = 1 << 29;
+    
     
     static boolean isReserved(int lock) {
         return (RESERVED_BIT & lock) > 0;
@@ -264,6 +250,20 @@ public class LockKeeperV2 {
     
     static int setWriteUnlocked(int lock) {
         return ~WRITE_LOCKED_BIT & setUnreserved(lock);
+    }
+    
+    
+    
+    public static class Waiter {
+        
+        volatile boolean allAcquired = false;
+        final Thread th;
+        final int[] locks;
+        
+        Waiter(final Thread th, final int[] locks) {
+            this.th = th;
+            this.locks = locks;
+        }
     }
     
     
@@ -319,3 +319,4 @@ public class LockKeeperV2 {
     }
     
 }
+
