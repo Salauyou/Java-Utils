@@ -107,9 +107,7 @@ public class LockKeeperV2 {
                                               throws InterruptedException {
         int[] locks = collectLocks(objects);
         Thread t = tryGetLocks(locks, false);
-        if (t == null)
-            return new CompositeLock(locks, LockType.WRITE);
-        else {
+        if (t != null) {
             Waiter w = new Waiter(t, locks);
             waiters.add(w);
             LockSupport.park();
@@ -119,8 +117,8 @@ public class LockKeeperV2 {
                     // TODO: release locks if any are held
                     throw new InterruptedException();
             }
-            return new CompositeLock(locks, LockType.WRITE);
-        }   
+        }
+        return new CompositeLock(locks, LockType.WRITE);
     }
     
     
