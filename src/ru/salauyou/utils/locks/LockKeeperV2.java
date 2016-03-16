@@ -21,12 +21,27 @@ import java.util.concurrent.locks.Lock;
 import ru.salauyou.locks.LockKeeper.LockType;
 import sun.misc.Unsafe;
 
+/**
+ * Version 2 of {@link LockKeeper}, adopted to highly concurrent 
+ * environment.
+ * <p>
+ * <b>Not implemented yet:</b>
+ * <ul>
+ * <li>read locks
+ * <li>reentrancy
+ * </ul>
+ * <p>
+ * After implementation of these features, will replace current
+ * version of {@link LockKeeper}.
+ * 
+ * @author Salauyou
+ */
 public class LockKeeperV2 {
 
     /*
-     * The aims of this implementation:
-     * 1) getting rid of global lock for waiter queue
-     * 2) allow concurrent acquision of non-overlapping stripes
+     * This implementation aims to:
+     * 1) get rid of global lock for waiter queue
+     * 2) allow concurrent acquision for non-overlapping stripes
      * 3) switch from Lock[] to int[]
      * 
      * TODO: make locks reentrant
@@ -117,11 +132,12 @@ public class LockKeeperV2 {
         // acquision of locks is performed in two stages:
         // 1) reservation stage, where each lock is "reserved",
         //    then tested if it can be acquired. This is a place 
-        //    where wait-freeness is violated: before reservation, 
+        //    where lock-freeness is violated: before reservation, 
         //    busy waiting is peformed if the lock is already reserved 
-        //    by another thread (fortunately, this is a rare case). 
+        //    by another thread, so current thead can be "blocked" for
+        //    unknown amount of time (fortunately, this is a rare case). 
         //    If it is found that some particular lock is unable 
-        //    to be acquired, then all reserved locks gets unreserved 
+        //    to be acquired, all reserved locks gets unreserved 
         //    and a current thread is returned;
         // 2) acquision stage, where locks are marked acquired
         //    and reservation marks are cleared. 
