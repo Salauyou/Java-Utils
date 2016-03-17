@@ -110,7 +110,8 @@ public class LockKeeperV2 {
         if (t != null) {
             Waiter w = new Waiter(t, locks);
             waiters.add(w);
-            LockSupport.park();
+            tryUnlockWaiters();         // if locks are acquired here, 
+            LockSupport.park();         // this won't block 
             while (!w.allAcquired) {
                 LockSupport.park();
                 if (currentThread().isInterrupted())
@@ -150,7 +151,7 @@ public class LockKeeperV2 {
     
     
     Thread tryGetLocks(final int[] locks, boolean precheck) {       
-        // acquision of locks is performed in two stages:
+        // acquisition of locks is performed in two stages:
         // 1) reservation stage, where each lock is "reserved",
         //    then tested if it can be acquired. This is a place 
         //    where lock-freeness is violated: before reservation, 
@@ -160,7 +161,7 @@ public class LockKeeperV2 {
         //    If it is found that some particular lock is unable 
         //    to be acquired, all reserved locks gets unreserved 
         //    and a current thread is returned;
-        // 2) acquision stage, where locks are marked acquired
+        // 2) acquisition stage, where locks are marked acquired
         //    and reservation marks are cleared. 
         
         // pre-check
@@ -203,6 +204,7 @@ public class LockKeeperV2 {
     void tryUnlockWaiters() {
         opCounter.incrementAndGet();
         for (;;) {
+            // perform retries in one thread
             if (!queueLock.compareAndSet(false, true))
                 return;
             long c = opCounter.get();
