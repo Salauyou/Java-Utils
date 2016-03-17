@@ -194,31 +194,25 @@ public class LockKeeperV2 {
         return null;
     }
     
+ 
    
-    
-    final AtomicBoolean queueLock = new AtomicBoolean();  // synchronizer for `tryUnlockWaiters` 
-    final AtomicLong opCounter = new AtomicLong();        // operation counter
-    final List<Waiter> newWaiters = new ArrayList<>();
+    final AtomicLong opCounter = new AtomicLong();  // operation counter
     
     
     void tryUnlockWaiters() {
         opCounter.incrementAndGet();
         for (;;) {
-            // perform retries in one thread
-            if (!queueLock.compareAndSet(false, true))
-                return;
-            long c = opCounter.get();
+            final List<Waiter> ws = new ArrayList<>();
+            final long c = opCounter.get();
             Waiter w;
             while ((w = waiters.poll()) != null) {
                 if (tryGetLocks(w.locks, true) == null) {
                     w.allAcquired = true;
                     LockSupport.unpark(w.th);
                 } else
-                    newWaiters.add(w);
+                    ws.add(w);
             }
-            waiters.addAll(newWaiters);
-            newWaiters.clear();            
-            queueLock.set(false);
+            waiters.addAll(ws);
             
             // return only if no unlocks occurred
             // during queue traversal
