@@ -5,7 +5,7 @@ Some useful utilities I use in Java projects.
 
 [`LockKeeper`](src/main/java/ru/salauyou/util/concurrent/LockKeeper.java) — 
 hash-based stripe locker, which allows to acquire one composite lock 
-for multiple objects at single operation. It is ***insensitive to order*** 
+for multiple objects by single operation. It is ***insensitive to order*** 
 (objects can be passed in any order), ***fair***, implements 
 ***all-or-none*** strategy (sub-locks aren't acquired one by one, instead,
 a thread waits until all needed locks are available. Such approach reduces
