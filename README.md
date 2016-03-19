@@ -6,11 +6,11 @@ Some useful utilities I use in Java projects.
 [`LockKeeper`](src/main/java/ru/salauyou/util/concurrent/LockKeeper.java) — 
 hash-based stripe locker, which allows to acquire one composite lock 
 for multiple objects atomically. It is ***insensitive to order*** 
-(order of objects passed doesn't need to be defined), 
-***fair*** (threads that wait most are first candidates to acquire 
-locks), implements ***all-or-none*** strategy (which allows a waiter 
-thread continue as soon as all locks that it needs become available) 
-and supports ***exclusive*** (write) as well as ***shared*** (read) locks:
+(objects can be passed in any order), ***fair***, implements 
+***all-or-none*** strategy (sub-locks aren't acquired one by one, instead,
+a thread waits until all needed locks are available. Such approach reduces
+contention and makes deadlocking impossible). Are supported ***exclusive*** 
+(write) as well as ***shared*** (read) locks.
 
 <pre>
 Lock lock = lockKeeper.lockAndGet(o1, o2, o3); // blocks until locks for all 
