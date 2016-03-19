@@ -65,6 +65,7 @@ public class ExpirableMap<K, V> extends AbstractMap<K, V> {
     }
 
     
+    
     //==============================================================
     
 
@@ -75,8 +76,11 @@ public class ExpirableMap<K, V> extends AbstractMap<K, V> {
      * @param baseMap backed map. All entries that it contains so far
      *        become treated as stored with no deadline, i. e. "forever"
      * @param defaultLifetime default lifetime in ms
+     * @throws IllegalArgumentException if defaultLifetime < 0
      */
-    public ExpirableMap(Map<K, V> baseMap, long defaultLifetime) {
+    public ExpirableMap(Map<K, V> baseMap, long defaultLifetime) throws IllegalArgumentException {
+        if (defaultLifetime < 0)
+            throw new IllegalArgumentException("defaultLifetime must be >= 0");
         data = baseMap;
         this.defaultLifetime = defaultLifetime;
     }
@@ -117,7 +121,7 @@ public class ExpirableMap<K, V> extends AbstractMap<K, V> {
 
     
     /**
-     * Puts (K, V) entry with default lifetime
+     * Puts an entry with default lifetime
      */
     @Override
     public synchronized V put(K key, V value) {
@@ -125,12 +129,15 @@ public class ExpirableMap<K, V> extends AbstractMap<K, V> {
     }
 
     
-    /**
-     * Puts (K, V) entry with specified lifetime
+    /**    
+     * Puts an entry with specified lifetime
      * 
      * @param lifetime    lifetime in ms
+     * @throws IllegalArgumentException if lifetime < 0
      */
-    public synchronized V put(K key, V value, long lifetime) {
+    public synchronized V put(K key, V value, long lifetime) throws IllegalArgumentException {
+        if (lifetime < 0)
+            throw new IllegalArgumentException("lifetime must be >= 0");
         long now = System.currentTimeMillis();
         long expTime = now + lifetime;
         if (expTime < 0) // overflow!
