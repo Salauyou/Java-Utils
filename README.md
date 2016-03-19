@@ -9,8 +9,8 @@ for multiple objects by single operation. It is ***insensitive to order***
 (objects can be passed in any order), ***fair***, implements 
 ***all-or-none*** strategy (sub-locks aren't acquired one by one, instead,
 a thread waits until all needed locks are available. Such approach reduces
-contention and makes deadlocking impossible). Are supported ***exclusive*** 
-(write) as well as ***shared*** (read) locks.
+contention and allows to avoid deadlocking in multiple lock acquisition). 
+Are supported ***exclusive*** (write) as well as ***shared*** (read) locks.
 
 <pre>
 Lock lock = lockKeeper.lockAndGet(o1, o2, o3); // blocks until locks for all 
