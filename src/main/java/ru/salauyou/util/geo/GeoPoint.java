@@ -1,9 +1,9 @@
-package ru.salauyou.utils;
+package ru.salauyou.util.geo;
 
 /**
  * Immutable point in geo coordinates (latitude, longitude) with accuracy in km
  */
-public class GeoPoint {
+public final class GeoPoint {
 
     private final double lat;
     private final double lon;
@@ -14,7 +14,7 @@ public class GeoPoint {
      * @param lat
      * @param lon 
      */
-    public GeoPoint(double lat, double lon){
+    public GeoPoint(double lat, double lon) {
         this(lat, lon, -1);
     }
     
@@ -24,7 +24,7 @@ public class GeoPoint {
      * @param lon        longitude
      * @param accuracy    accuracy in km
      */
-    public GeoPoint(double lat, double lon, double accuracy){
+    public GeoPoint(double lat, double lon, double accuracy) {
         this.lat = lat;
         this.lon = lon;
         this.accuracy = accuracy;

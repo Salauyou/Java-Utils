@@ -1,6 +1,6 @@
-package ru.salauyou.utils;
+package ru.salauyou.util.geo;
 
-import ru.salauyou.utils.GeoProjections.Projection;
+import ru.salauyou.util.geo.GeoProjections.Projection;
 
 public class GeoCalculations {
 
@@ -10,17 +10,17 @@ public class GeoCalculations {
     
     
     /**
-     * Find intersection points of 2 circles with given center and radius. 
-     * Supposed, that circles with 0.85d < (r1 + r2) < d (where d is distance between their centers)
-     * intersect in one point laying on line segment connecting centers 
+     * Find intersection points of 2 circles with given 
+     * center and radius. Supposed, that circles with 
+     * 0.85d < (r1 + r2) < d (where d is distance between 
+     * their centers) intersect in one point laying on 
+     * line segment connecting centers 
      * 
-     * @param c1 
-     * @param r1
-     * @param c2
-     * @param r2
-     * @return array of 2 different points, or 2 same points, or null, depending on how given circles intersect
+     * @return array of 2 different points, or 2 same points, 
+     *         or null, depending on how given circles intersect
      */
-    static public Point[] find2CirclesIntersections(final Point c1, final double r1, final Point c2, final double r2){
+    static public Point[] find2CirclesIntersections(final Point c1, final double r1, 
+                                                    final Point c2, final double r2) {
         
         if (r1 < 0 || r2 < 0)
             return null;

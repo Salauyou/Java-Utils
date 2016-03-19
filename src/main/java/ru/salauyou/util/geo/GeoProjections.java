@@ -1,4 +1,4 @@
-package ru.salauyou.utils;
+package ru.salauyou.util.geo;
 
 public final class GeoProjections {
 

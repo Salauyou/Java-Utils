@@ -1,4 +1,4 @@
-package ru.salauyou.utils.locks;
+package ru.salauyou.util.concurrent;
 
 import java.util.ArrayList;
 import java.util.Arrays;

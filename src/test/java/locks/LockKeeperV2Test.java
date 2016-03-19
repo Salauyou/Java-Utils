@@ -16,9 +16,9 @@ import org.junit.Test;
 import locks.Model.Bank;
 import locks.Model.Payment;
 import locks.Model.Subject;
-import ru.salauyou.utils.StatsBuilder;
-import ru.salauyou.utils.locks.LockKeeper;
-import ru.salauyou.utils.locks.LockKeeperV2;
+import ru.salauyou.util.concurrent.LockKeeper;
+import ru.salauyou.util.concurrent.LockKeeperV2;
+import ru.salauyou.util.misc.StatsBuilder;
 
 
 public class LockKeeperV2Test {

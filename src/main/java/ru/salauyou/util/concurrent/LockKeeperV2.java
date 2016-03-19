@@ -1,4 +1,4 @@
-package ru.salauyou.utils.locks;
+package ru.salauyou.util.concurrent;
 
 import static java.lang.Thread.currentThread;
 
@@ -12,14 +12,13 @@ import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicIntegerArray;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.LockSupport;
 
-import ru.salauyou.utils.locks.LockKeeper.LockType;
+import ru.salauyou.util.concurrent.LockKeeper.LockType;
 
 /**
  * Version 2 of {@link LockKeeper}, adopted to highly concurrent 

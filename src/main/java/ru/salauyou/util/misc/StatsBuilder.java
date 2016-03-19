@@ -1,4 +1,4 @@
-package ru.salauyou.utils.utils;
+package ru.salauyou.util.misc;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -43,16 +43,18 @@ public class StatsBuilder<T extends Comparable<T>> {
     public synchronized String percentilesToString(double[] percentiles) {
         
         StringBuilder sb = new StringBuilder();
-        List<T> percentileValues = this.getPercentiles(percentiles);
+        List<? super T> percentileValues = this.getPercentiles(percentiles);
         
         if (percentileValues.size() == 0)
             return "";
         
         for (int i = 0; i < percentiles.length; i++)
-            sb.append(percentiles[i]).append("%\t").append(percentileValues.get(i)).append("\n");
+            sb.append(percentiles[i])
+              .append("%\t")
+              .append(percentileValues.get(i))
+              .append("\n");
         return sb.toString().substring(0, sb.length() - 1);
     }
-    
     
     
     public synchronized int getCount() {
