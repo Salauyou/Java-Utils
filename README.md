@@ -20,7 +20,7 @@ try {
 } finally {
     lock.unlock();                             // releases locks for all o1, o2 and o3
 }</pre>
-
+--
 [`ExpirableMap`](src/main/java/ru/salauyou/util/collect/ExpirableMap.java) — 
 synchronized `Map<K, V>` decorator, where every entry has specified 
 expiration time which is measured from the moment the entry was put 
