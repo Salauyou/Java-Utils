@@ -14,8 +14,7 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collector;
 
-public class StatsBuilder<V extends Comparable<? super V>> 
-                    implements Collector<V, StatsBuilder<V>, StatsBuilder<V>> {
+public class StatsBuilder<V extends Comparable<? super V>> {
 
     final Queue<V> values = new ConcurrentLinkedQueue<>();
     final AtomicInteger items = new AtomicInteger();
@@ -59,7 +58,7 @@ public class StatsBuilder<V extends Comparable<? super V>>
     }
     
     
-    public List<? super V> getPercentiles(double[] percentiles) 
+    public List<V> getPercentiles(double[] percentiles) 
                                                    throws IllegalArgumentException {
         List<V> vs = new ArrayList<>(values);
         if (vs.size() == 0)
@@ -103,7 +102,7 @@ public class StatsBuilder<V extends Comparable<? super V>>
 
     
     /**
-     * Number of all items accepted by <tt>put()/putAll()</tt>, 
+     * Number of all items accepted by <tt>put()/putAll()</tt>
      * including skipped items
      */
     public int totalCount() {
@@ -112,42 +111,59 @@ public class StatsBuilder<V extends Comparable<? super V>>
     
     
     
-    // ------------- Collector impl --------------- //
-    
-    @Override
-    public Supplier<StatsBuilder<V>> supplier() {
-        return StatsBuilder::new;
-    }
-
-
-    @Override
-    public BiConsumer<StatsBuilder<V>, V> accumulator() {
-        return StatsBuilder::put;
-    }
-
-
-    @Override
-    public BinaryOperator<StatsBuilder<V>> combiner() {
-        return StatsBuilder::putAll;
-    }
-
-
-    @Override
-    public Function<StatsBuilder<V>, StatsBuilder<V>> finisher() {
-        return Function.identity();
-    }
-
-    
     static final Set<Collector.Characteristics> CH
         = Collections.unmodifiableSet(EnumSet.of(
-                        Collector.Characteristics.UNORDERED,
-                        Collector.Characteristics.IDENTITY_FINISH,
-                        Collector.Characteristics.CONCURRENT));
+                    Collector.Characteristics.UNORDERED,
+                    Collector.Characteristics.IDENTITY_FINISH,
+                    Collector.Characteristics.CONCURRENT));
+    
+    
+    /**
+     * Returns a collector based on a newly created <tt>StatsBuilder</tt>.
+     * <p>
+     * The following example shows how to easily get quartiles of some 
+     * randomly distributed property (here, execution time), given items 
+     * are stored in some collection:
+     * <pre>{@code
+     * List<Integer> quartiles 
+     *     = processedItems.stream()
+     *           .map(Item::getExecutionTime)
+     *           .collect(StatsBuilder.collector())
+     *           .getPercentiles(new double[]{ 25, 50, 75, 100 }));
+     * }</pre>
+     *  
+     * @see java.util.stream.Stream#collect(Collector)
+     */
+    public static <V extends Comparable<? super V>> 
+                        Collector<V, StatsBuilder<V>, StatsBuilder<V>> collector() {
+        
+        return new Collector<V, StatsBuilder<V>, StatsBuilder<V>>() {
 
-    @Override
-    public Set<Collector.Characteristics> characteristics() {
-        return CH;
+            @Override
+            public Supplier<StatsBuilder<V>> supplier() {
+                return StatsBuilder::new;
+            }
+
+            @Override
+            public BiConsumer<StatsBuilder<V>, V> accumulator() {
+                return StatsBuilder::put;
+            }
+
+            @Override
+            public BinaryOperator<StatsBuilder<V>> combiner() {
+                return StatsBuilder::putAll;
+            }
+
+            @Override
+            public Function<StatsBuilder<V>, StatsBuilder<V>> finisher() {
+                return Function.identity();
+            }
+
+            @Override
+            public Set<Collector.Characteristics> characteristics() {
+                return CH;
+            }
+        };
     }
-    
-    
+ 
 }
