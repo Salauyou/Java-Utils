@@ -12,9 +12,6 @@ import ru.salauyou.util.misc.StatsBuilder;
 
 public class TestStatsBuilder {
     
-    static final double[] S_PERCENTILES = { 68.26, 95.44, 99.73 };
-    static final double[] QUARTILES = { 25, 50, 75, 100 };
-    
     static final Random R = new Random();
     
     
@@ -27,7 +24,7 @@ public class TestStatsBuilder {
                    .map(Math::abs)
                    .collect(StatsBuilder.collector());
         
-        List<Double> prc = sb.getPercentiles(S_PERCENTILES);
+        List<Double> prc = sb.getPercentiles(68.26, 95.44, 99.73);
         assertEquals(1d, prc.get(0), 0.02);     // ± 1σ
         assertEquals(2d, prc.get(1), 0.05);     // ± 2σ
         assertEquals(3d, prc.get(2), 0.1);      // ± 3σ
@@ -36,11 +33,11 @@ public class TestStatsBuilder {
         sb = Stream.generate(() -> R.nextDouble() * 100).limit(10_000)  
                    .collect(StatsBuilder.collector());
         
-        prc = sb.getPercentiles(QUARTILES);
-        assertEquals(25, prc.get(0), 1);
-        assertEquals(50, prc.get(1), 1);
-        assertEquals(75, prc.get(2), 1);
-        assertEquals(100, prc.get(3), 1);
+        prc = sb.getPercentiles(25, 50, 75, 100);
+        assertEquals(25, prc.get(0), 2);
+        assertEquals(50, prc.get(1), 2);
+        assertEquals(75, prc.get(2), 2);
+        assertEquals(100, prc.get(3), 2);
     }
     
     

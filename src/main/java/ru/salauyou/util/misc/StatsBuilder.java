@@ -58,8 +58,8 @@ public class StatsBuilder<V extends Comparable<? super V>> {
     }
     
     
-    public List<V> getPercentiles(double[] percentiles) 
-                                                   throws IllegalArgumentException {
+    public List<V> getPercentiles(double... percentiles) 
+                                                 throws IllegalArgumentException {
         List<V> vs = new ArrayList<>(values);
         if (vs.size() == 0)
             return Collections.emptyList();
@@ -77,8 +77,8 @@ public class StatsBuilder<V extends Comparable<? super V>> {
     }
     
     
-    public String percentilesToString(double[] percentiles) 
-                                                   throws IllegalArgumentException {        
+    public String percentilesToString(double... percentiles) 
+                                                 throws IllegalArgumentException {        
         StringBuilder sb = new StringBuilder();
         List<? super V> percentileValues = this.getPercentiles(percentiles);
         for (int i = 0; i < percentiles.length; i++) {
@@ -127,9 +127,9 @@ public class StatsBuilder<V extends Comparable<? super V>> {
      * <pre>{@code
      * List<Integer> quartiles 
      *     = processedItems.stream()
-     *           .map(Item::getExecutionTime)
-     *           .collect(StatsBuilder.collector())
-     *           .getPercentiles(new double[]{ 25, 50, 75, 100 }));
+     *              .map(Item::getExecutionTime)
+     *              .collect(StatsBuilder.collector())
+     *              .getPercentiles(25, 50, 75, 100);
      * }</pre>
      *  
      * @see java.util.stream.Stream#collect(Collector)
