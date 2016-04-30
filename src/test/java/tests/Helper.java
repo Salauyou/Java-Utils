@@ -1,8 +1,13 @@
-package locks;
-
+package tests;
 
 import java.math.BigDecimal;
+import java.time.Instant;
+import java.util.List;
 import java.util.Random;
+
+import tests.Model.Bank;
+import tests.Model.Payment;
+import tests.Model.Subject;
 
 public class Helper {
 
@@ -56,6 +61,30 @@ public class Helper {
         for (int i = 0; i < length; i++) 
             sb.append(NAMES[rnd.nextInt(NAMES.length)]).append(" ");
         return sb.deleteCharAt(sb.length() - 1).toString();
+    }
+    
+    
+    
+    
+    public static Subject generateSubject(Random rnd, List<Bank> banks) {
+        return new Subject(Helper.generateString(rnd, 2) + "-" + Helper.generateStringNumeric(rnd, 5))
+                .setBank(banks.get(rnd.nextInt(banks.size())))
+                .setName(Helper.generateName(rnd, 2));
+    }
+    
+    
+    public static Bank generateBank(Random rnd) {
+        return new Bank((long) rnd.nextInt(1000000000))
+                .setName(Helper.generateName(rnd, 1) + " Bank");
+    
+    }
+    
+    
+    public static Payment generatePayment(Random rnd, List<Subject> payers, List<Subject> receivers) {
+        return new Payment(rnd.nextLong()).setPayer(payers.get(rnd.nextInt(payers.size())))
+                .setReceiver(receivers.get(rnd.nextInt(receivers.size())))
+                .setTimeStamp(Instant.now())
+                .setAmount(BigDecimal.valueOf(rnd.nextInt(10000)).scaleByPowerOfTen(-2));
     }
     
 }

@@ -1,8 +1,7 @@
-package locks;
+package tests.concurrent;
+
 import static org.junit.Assert.assertTrue;
 
-import java.math.BigDecimal;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -11,14 +10,17 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.locks.Lock;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.junit.Test;
 
-import locks.Model.Bank;
-import locks.Model.Payment;
-import locks.Model.Subject;
 import ru.salauyou.util.concurrent.LockKeeper;
 import ru.salauyou.util.misc.StatsBuilder;
+import tests.Helper;
+import tests.Model.Bank;
+import tests.Model.Payment;
+import tests.Model.Subject;
 
 
 public class LockKeeperTest {
@@ -40,19 +42,14 @@ public class LockKeeperTest {
         Random rnd = new Random();
         StatsBuilder<Integer> sb = new StatsBuilder<>();
         
-        List<Bank> banks = new ArrayList<>(BANKS);
-        List<Subject> payers = new ArrayList<>(PAYERS);
-        List<Subject> receivers = new ArrayList<>(RECEIVERS);
-        List<Payment> payments = new ArrayList<>(PAYMENTS);
-        
-        for (int i = 0; i < BANKS; i++) 
-            banks.add(generateBank(rnd));
-        for (int i = 0; i < PAYERS; i++) 
-            payers.add(generateSubject(rnd, banks));
-        for (int i = 0; i < RECEIVERS; i++) 
-            receivers.add(generateSubject(rnd, banks));
-        for (int i = 0; i < PAYMENTS; i++) 
-            payments.add(generatePayment(rnd, payers, receivers));
+        List<Bank> banks = Stream.generate(() -> Helper.generateBank(rnd)).limit(BANKS)
+                .collect(Collectors.toList());        
+        List<Subject> payers = Stream.generate(() -> Helper.generateSubject(rnd, banks)).limit(PAYERS)
+                .collect(Collectors.toList());        
+        List<Subject> receivers = Stream.generate(() -> Helper.generateSubject(rnd, banks)).limit(RECEIVERS)
+                .collect(Collectors.toList());        
+        List<Payment> payments = Stream.generate(() -> Helper.generatePayment(rnd, payers, receivers)).limit(PAYMENTS)
+                .collect(Collectors.toList());
         
         List<Future<Void>> tasks = new ArrayList<>();
         ExecutorService es = Executors.newFixedThreadPool(THREADS);
@@ -97,30 +94,5 @@ public class LockKeeperTest {
         es.shutdownNow();
     }
     
-    
-    
-    //========================================================================================= //
-    
-    
-    static Subject generateSubject(Random rnd, List<Bank> banks) {
-        return new Subject(Helper.generateString(rnd, 2) + "-" + Helper.generateStringNumeric(rnd, 5))
-                .setBank(banks.get(rnd.nextInt(banks.size())))
-                .setName(Helper.generateName(rnd, 2));
-    }
-    
-    
-    static Bank generateBank(Random rnd) {
-        return new Bank((long) rnd.nextInt(1000000000))
-                .setName(Helper.generateName(rnd, 1) + " Bank");
-    
-    }
-    
-    
-    static Payment generatePayment(Random rnd, List<Subject> payers, List<Subject> receivers) {
-        return new Payment(rnd.nextLong()).setPayer(payers.get(rnd.nextInt(payers.size())))
-                .setReceiver(receivers.get(rnd.nextInt(receivers.size())))
-                .setTimeStamp(Instant.now())
-                .setAmount(BigDecimal.valueOf(rnd.nextInt(10000)).scaleByPowerOfTen(-2));
-    }
 
 }

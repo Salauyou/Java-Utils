@@ -1,4 +1,4 @@
-package util;
+package tests.misc;
 
 import static org.junit.Assert.assertEquals;
 
@@ -20,7 +20,7 @@ public class TestStatsBuilder {
         StatsBuilder<Double> sb;
         
         // folded normal distribution, σ = 1
-        sb = Stream.generate(R::nextGaussian).limit(10_000) 
+        sb = Stream.generate(R::nextGaussian).limit(100_000) 
                    .map(Math::abs)
                    .collect(StatsBuilder.collector());
         
@@ -30,7 +30,7 @@ public class TestStatsBuilder {
         assertEquals(3d, prc.get(2), 0.1);      // ± 3σ
         
         // uniform distribution [0, 100)
-        sb = Stream.generate(() -> R.nextDouble() * 100).limit(10_000)  
+        sb = Stream.generate(() -> R.nextDouble() * 100).limit(100_000)  
                    .collect(StatsBuilder.collector());
         
         prc = sb.getPercentiles(25, 50, 75, 100);

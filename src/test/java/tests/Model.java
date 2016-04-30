@@ -1,4 +1,4 @@
-package locks;
+package tests;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -13,17 +13,19 @@ public class Model {
         
     }
     
+    
     //===============================================//
     
     public static class Bank implements Entity<Long> {
 
-        private final Long bic;
+        private Long bic;
         private String name;
         
         public static String TYPE = "Bank";
         
+        public Bank() {}
+     
         
-        /** public constructor **/
         public Bank(Long bic) {
             this.bic = bic;
         }
@@ -55,20 +57,21 @@ public class Model {
         }
     }
     
+    
     //===============================================//
     
     public static class Payment implements Entity<Long> {
 
         public static String TYPE = "Payment";
         
-        private final Long id;
+        private Long id;
         private BigDecimal amount;
         private Subject payer;
         private Subject receiver;
         private Instant timeStamp;
 
+        public Payment() {}
         
-        /** public constructor **/
         public Payment(Long id) {
             this.id = id;
         }
@@ -88,8 +91,6 @@ public class Model {
             return String.format("Payment of amount %s, payer=%s, receiver=%s", amount, payer, receiver);
         }
         
-        
-
         public BigDecimal getAmount() {
             return amount;
         }
@@ -128,21 +129,22 @@ public class Model {
 
     }
     
+    
     //===============================================//
     
     public static class Subject implements Entity<String> {
 
-        private final String bicAccount;
+        private String bicAccount;
         private String name;
         private Bank bank;
         
         public static String TYPE = "Subject";
-        
-        /** public constructor **/
+                
+        public Subject() {}       
+       
         public Subject(String bicAccount) {
             this.bicAccount = bicAccount;
         }
-        
         
         @Override
         public String getId() {
@@ -154,28 +156,23 @@ public class Model {
             return TYPE;
         }
 
-        
         @Override
         public String toString() {
             return String.format("%s [%s:%s]", name, bank, bicAccount); 
         }
-        
-        
+                
         public String getName() {
             return name;
         }
-
 
         public Subject setName(String name) {
             this.name = name;
             return this;
         }
 
-
         public Bank getBank() {
             return bank;
         }
-
 
         public Subject setBank(Bank bank) {
             this.bank = bank;
