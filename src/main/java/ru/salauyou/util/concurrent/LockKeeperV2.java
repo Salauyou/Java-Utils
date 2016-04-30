@@ -18,7 +18,6 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.LockSupport;
 
-import ru.salauyou.util.concurrent.LockKeeper.LockType;
 
 /**
  * Version 2 of {@link LockKeeper}, adopted to highly concurrent 
@@ -45,6 +44,8 @@ public class LockKeeperV2 {
      * 
      * TODO: make locks reentrant
      * TODO: implement readlock
+     * TODO: instead of choosing segment by particular type, 
+     *       search for the closest supertype (e. g. ArrayList -> List)
      */
     
     final int mask;
@@ -142,8 +143,10 @@ public class LockKeeperV2 {
     
     
     int stripeForObject(Object o) {
+        if (o == null)
+            return 0;
         int shift = shiftsForClasses == null 
-              ? 0 : shiftsForClasses.getOrDefault(o.getClass(), 0);
+              ? 0 : shiftsForClasses.getOrDefault(o.getClass(), 0);  // TODO: search for the closest supertype
         return shift + (o.hashCode() & mask);
     } 
     
@@ -221,6 +224,8 @@ public class LockKeeperV2 {
     }
        
     
+    public static enum LockType { READ, WRITE }
+    
 
     static final int RESERVED_BIT     = 1 << 30;
     static final int WRITE_LOCKED_BIT = 1 << 29;
@@ -290,30 +295,35 @@ public class LockKeeperV2 {
 
         @Override
         public void lock() throws UnsupportedOperationException {
-            throw new UnsupportedOperationException(UNSUPPORTED_MSG);
+            throwUnsupported(UNSUPPORTED_MSG);
         }
 
         @Override
         public void lockInterruptibly() throws InterruptedException, 
                                                UnsupportedOperationException {
-            throw new UnsupportedOperationException(UNSUPPORTED_MSG);
+            throwUnsupported(UNSUPPORTED_MSG);
         }
 
         @Override
         public boolean tryLock() throws UnsupportedOperationException {
-            throw new UnsupportedOperationException(UNSUPPORTED_MSG);
+            return throwUnsupported(UNSUPPORTED_MSG);
         }
 
         @Override
         public boolean tryLock(long time, TimeUnit unit) 
                                          throws UnsupportedOperationException {
-            throw new UnsupportedOperationException(UNSUPPORTED_MSG);
+            return throwUnsupported(UNSUPPORTED_MSG);
         }
         
         @Override
         public Condition newCondition() throws UnsupportedOperationException {
-            throw new UnsupportedOperationException();
+            return throwUnsupported("");
         }
+    }
+    
+    
+    static <T> T throwUnsupported(String msg) throws UnsupportedOperationException {
+        throw new UnsupportedOperationException(msg);
     }
     
 }

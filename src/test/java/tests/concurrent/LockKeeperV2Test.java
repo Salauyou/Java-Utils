@@ -13,7 +13,6 @@ import java.util.stream.Stream;
 
 import org.junit.Test;
 
-import ru.salauyou.util.concurrent.LockKeeper;
 import ru.salauyou.util.concurrent.LockKeeperV2;
 import ru.salauyou.util.misc.StatsBuilder;
 import tests.Helper;
@@ -59,7 +58,7 @@ public class LockKeeperV2Test {
                 tasks.add(es.submit(() -> {
                     long timeStart = System.nanoTime();
                     Lock lock = lockKeeper.lockAndGet(
-                            LockKeeper.LockType.WRITE,
+                            LockKeeperV2.LockType.WRITE,
                             /*rnd.nextDouble() < (ii * 0.2d) 
                                     ? LockKeeper.LockType.WRITE 
                                     : LockKeeper.LockType.READ,*/
