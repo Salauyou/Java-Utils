@@ -25,10 +25,14 @@
 				<executions>
 					<execution>
 						<configuration>
-							<target><ant antfile="${basedir}/tabs-to-spaces.xml" /></target>
+							<target>
+								<ant antfile="${basedir}/tabs-to-spaces.xml" />
+							</target>
 						</configuration>
 						<phase>generate-sources</phase>
-						<goals><goal>run</goal></goals>
+						<goals>
+							<goal>run</goal>
+						</goals>
 					</execution>
 				</executions>
 			</plugin>
@@ -42,7 +46,9 @@
 				</configuration>
 				<executions>
 					<execution>
-						<goals><goal>jar</goal></goals>
+						<goals>
+							<goal>jar</goal>
+						</goals>
 					</execution>
 				</executions>
 			</plugin>
@@ -52,7 +58,9 @@
 				<executions>
 					<execution>
 						<id>attach-sources</id>
-						<goals><goal>jar</goal></goals>
+						<goals>
+							<goal>jar</goal>
+						</goals>
 					</execution>
 				</executions>
 			</plugin>
@@ -60,6 +68,11 @@
 	</build>
 
 	<dependencies>
+		<dependency>
+			<groupId>commons-logging</groupId>
+			<artifactId>commons-logging</artifactId>
+			<version>1.2</version>
+		</dependency>
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>

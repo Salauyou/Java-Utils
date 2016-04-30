@@ -7,7 +7,7 @@ import java.lang.annotation.Target;
 
 public class Annotations {
 
-    @Target({ ElementType.FIELD, ElementType.METHOD })
+    @Target(ElementType.METHOD)
     @Retention(RetentionPolicy.RUNTIME)
     public @interface MapTo {
         String value() default "";
@@ -20,4 +20,11 @@ public class Annotations {
         Class<?> value();
     }
 
+    
+    @Target(ElementType.METHOD)
+    @Retention(RetentionPolicy.RUNTIME)
+    public @interface PostMapping {
+        String[] value() default "";
+    }
+    
 }

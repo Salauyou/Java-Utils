@@ -9,6 +9,8 @@ public class Model {
 
         public T getId();
         
+        public void setId(T id);
+        
         public String getType();
         
     }
@@ -45,16 +47,21 @@ public class Model {
         public String toString() {
             return name;
         }
-        
-        
+
+        @Override
+        public void setId(Long id) {
+            this.bic = id;
+        }
+
+
         public String getName() {
             return name;
         }
 
-        public Bank setName(String name) {
+        public void setName(String name) {
             this.name = name;
-            return this;
         }
+
     }
     
     
@@ -68,7 +75,7 @@ public class Model {
         private BigDecimal amount;
         private Subject payer;
         private Subject receiver;
-        private Instant timeStamp;
+        private Instant timestamp;
 
         public Payment() {}
         
@@ -90,41 +97,42 @@ public class Model {
         public String toString() {
             return String.format("Payment of amount %s, payer=%s, receiver=%s", amount, payer, receiver);
         }
-        
+
+        @Override
+        public void setId(Long id) {
+            this.id = id;
+        }
+
         public BigDecimal getAmount() {
             return amount;
         }
 
-        public Payment setAmount(BigDecimal amount) {
+        public void setAmount(BigDecimal amount) {
             this.amount = amount;
-            return this;
         }
 
         public Subject getPayer() {
             return payer;
         }
 
-        public Payment setPayer(Subject payer) {
+        public void setPayer(Subject payer) {
             this.payer = payer;
-            return this;
         }
 
         public Subject getReceiver() {
             return receiver;
         }
 
-        public Payment setReceiver(Subject receiver) {
+        public void setReceiver(Subject receiver) {
             this.receiver = receiver;
-            return this;
         }
 
-        public Instant getTimeStamp() {
-            return timeStamp;
+        public Instant getTimestamp() {
+            return timestamp;
         }
 
-        public Payment setTimeStamp(Instant timeStamp) {
-            this.timeStamp = timeStamp;
-            return this;
+        public void setTimestamp(Instant timestamp) {
+            this.timestamp = timestamp;
         }
 
     }
@@ -150,6 +158,11 @@ public class Model {
         public String getId() {
             return bicAccount;
         }
+        
+        @Override
+        public void setId(String id) {
+            this.bicAccount = id;
+        }
 
         @Override
         public String getType() {
@@ -160,23 +173,21 @@ public class Model {
         public String toString() {
             return String.format("%s [%s:%s]", name, bank, bicAccount); 
         }
-                
+
         public String getName() {
             return name;
         }
 
-        public Subject setName(String name) {
+        public void setName(String name) {
             this.name = name;
-            return this;
         }
 
         public Bank getBank() {
             return bank;
         }
 
-        public Subject setBank(Bank bank) {
+        public void setBank(Bank bank) {
             this.bank = bank;
-            return this;
         }
 
     }

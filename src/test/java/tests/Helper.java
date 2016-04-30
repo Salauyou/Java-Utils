@@ -67,24 +67,27 @@ public class Helper {
     
     
     public static Subject generateSubject(Random rnd, List<Bank> banks) {
-        return new Subject(Helper.generateString(rnd, 2) + "-" + Helper.generateStringNumeric(rnd, 5))
-                .setBank(banks.get(rnd.nextInt(banks.size())))
-                .setName(Helper.generateName(rnd, 2));
+        Subject s = new Subject(Helper.generateString(rnd, 2) + "-" + Helper.generateStringNumeric(rnd, 5));
+        s.setBank(banks.get(rnd.nextInt(banks.size())));
+        s.setName(Helper.generateName(rnd, 2));
+        return s;
     }
     
     
     public static Bank generateBank(Random rnd) {
-        return new Bank((long) rnd.nextInt(1000000000))
-                .setName(Helper.generateName(rnd, 1) + " Bank");
-    
+        Bank b = new Bank((long) rnd.nextInt(1000000000));
+        b.setName(Helper.generateName(rnd, 1) + " Bank");
+        return b;
     }
     
     
     public static Payment generatePayment(Random rnd, List<Subject> payers, List<Subject> receivers) {
-        return new Payment(rnd.nextLong()).setPayer(payers.get(rnd.nextInt(payers.size())))
-                .setReceiver(receivers.get(rnd.nextInt(receivers.size())))
-                .setTimeStamp(Instant.now())
-                .setAmount(BigDecimal.valueOf(rnd.nextInt(10000)).scaleByPowerOfTen(-2));
+        Payment p = new Payment(rnd.nextLong());
+        p.setPayer(payers.get(rnd.nextInt(payers.size())));
+        p.setReceiver(receivers.get(rnd.nextInt(receivers.size())));
+        p.setTimestamp(Instant.now());
+        p.setAmount(BigDecimal.valueOf(rnd.nextInt(10000)).scaleByPowerOfTen(-2));
+        return p;
     }
     
 }
