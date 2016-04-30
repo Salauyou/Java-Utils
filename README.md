@@ -20,6 +20,16 @@ try {
 } finally {
     lock.unlock();                             // releases locks for all o1, o2 and o3
 }</pre>
+
+--
+[`EntityMapper`](src/main/java/ru/salauyou/util/mapper/EntityMapper.java) — 
+utility to simplify converting from one object (document, CSV line, java object etc) 
+to some java bean which may have deep nested hierarchy. Mappings are defined
+as elementary "mappers" (lambdas which extract scalar properties from the source
+object) mapped to bean-style properties of destination class 
+(they are accessed by correspondent setters behind the scenes).
+Simple example of usage: [`TestMapper.java`](src/test/java/tests/mapper/TestMapper.java).
+
 --
 [`ExpirableMap`](src/main/java/ru/salauyou/util/collect/ExpirableMap.java) — 
 synchronized `Map<K, V>` decorator, where every entry has specified 
@@ -29,6 +39,7 @@ on every write/read invocation, so it is guaranteed that no expired
 entries will be returned by retrieval operations. Expiration management 
 is implemented based on internal `LinkedList` and don't utilize 
 any additional threads.
+
 
 [`KCombinationIterator`](src/main/java/ru/salauyou/util/misc/KCombinationIterator.java) — 
 iterator that sequentially returns all k-subsets, or
