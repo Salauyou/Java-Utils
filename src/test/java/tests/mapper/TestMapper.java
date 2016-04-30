@@ -36,7 +36,7 @@ public class TestMapper {
         //  5 receiver.name
         //  6 id
         //  7 amount
-        //    8 timestamp
+        //  8 timestamp
         
         @MapTo()
         public void mapPayment() {
