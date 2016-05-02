@@ -31,6 +31,11 @@ object) mapped to bean-style properties of destination class
 Simple example of usage: [`TestMapper.java`](src/test/java/tests/mapper/TestMapper.java).
 
 --
+[`BeanHelper`](src/main/java/ru/salauyou/util/misc/BeanHelper.java) — 
+utility to work with beans. Now, it has only one method `BeahHelper.cloneOf()` 
+which deeply clones a bean with nested hirerarchy without using serialization.
+
+--
 [`ExpirableMap`](src/main/java/ru/salauyou/util/collect/ExpirableMap.java) — 
 synchronized `Map<K, V>` decorator, where every entry has specified 
 expiration time which is measured from the moment the entry was put 
