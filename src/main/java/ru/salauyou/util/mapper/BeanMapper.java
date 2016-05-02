@@ -21,7 +21,9 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 
-
+/**
+ * @author Salauyou
+ */
 final class BeanMapper<S, D> implements Mapper<S, D> {
     
     final static Log log = LogFactory.getLog(BeanMapper.class);

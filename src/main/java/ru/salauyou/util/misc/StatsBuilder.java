@@ -14,6 +14,10 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collector;
 
+
+/**
+ * @author Salauyou
+ */
 public class StatsBuilder<V extends Comparable<? super V>> {
 
     final Queue<V> values = new ConcurrentLinkedQueue<>();

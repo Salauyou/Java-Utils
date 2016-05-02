@@ -21,6 +21,8 @@ import java.util.function.Supplier;
  * To iterate over k-combinations inside a for-each loop, 
  * use {@link KCombinationIterator#decorateForEach(Collection, int)}
  * decorator.
+ * 
+ * @author Salauyou
  */
 public class KCombinationIterator<T> implements Iterator<Collection<T>> {
 

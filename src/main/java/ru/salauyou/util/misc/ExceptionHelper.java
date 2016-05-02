@@ -1,5 +1,8 @@
 package ru.salauyou.util.misc;
 
+/**
+ * @author Salauyou
+ */
 public class ExceptionHelper {
 
     

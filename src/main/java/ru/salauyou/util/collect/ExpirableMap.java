@@ -24,6 +24,8 @@ import java.util.Set;
  * <i>Iterators are not synchronized by expiration time (i. e.
  * can return expired elements). This wrong behavior is a subject 
  * for correction in further implementation</i>
+ * 
+ * @author Salauyou
  */
 public class ExpirableMap<K, V> extends AbstractMap<K, V> {
 
