@@ -21,6 +21,9 @@ try {
     lock.unlock();                             // releases locks for all o1, o2 and o3
 }</pre>
 
+[`LockKeeperV2`](src/main/java/ru/salauyou/util/concurrent/LockKeeperV2.java) — 
+faster implementation, but doesn't yet support reentrancy and read locks
+
 --
 [`EntityMapper`](src/main/java/ru/salauyou/util/mapper/EntityMapper.java) — 
 utility to simplify converting from one object (document, CSV line, java object etc) 
