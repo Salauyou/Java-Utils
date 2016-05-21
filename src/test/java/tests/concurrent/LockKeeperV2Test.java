@@ -18,6 +18,7 @@ import ru.salauyou.util.misc.StatsBuilder;
 import tests.Helper;
 import tests.Model.Bank;
 import tests.Model.Payment;
+import tests.Model.Subj;
 import tests.Model.Subject;
 
 
@@ -28,17 +29,16 @@ public class LockKeeperV2Test {
     static final int RECEIVERS = 2000;
     static final int BANKS     = 50;
     static final int PAYMENTS  = 500000;
-    static final int THREADS   = 20;
+    static final int THREADS   = 10;
     
  
     
     @Test 
     public void testLocks() {
         
-        LockKeeperV2 lockKeeper = new LockKeeperV2(10, Bank.class, Subject.class, Payment.class);
+        LockKeeperV2 lockKeeper = new LockKeeperV2(8, Bank.class, Subj.class, Payment.class);
         
         Random rnd = new Random();
-        StatsBuilder<Integer> sb = new StatsBuilder<>();
         
         List<Bank> banks = Stream.generate(() -> Helper.generateBank(rnd)).limit(BANKS)
                 .collect(Collectors.toList());        
@@ -53,7 +53,7 @@ public class LockKeeperV2Test {
         ExecutorService es = Executors.newFixedThreadPool(THREADS);
         
         for (int i = 0; i < 10; i++) {
-            final int ii = i;
+            StatsBuilder<Integer> sb = new StatsBuilder<>();
             payments.forEach(p -> {
                 tasks.add(es.submit(() -> {
                     long timeStart = System.nanoTime();

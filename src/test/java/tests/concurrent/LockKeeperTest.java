@@ -40,7 +40,6 @@ public class LockKeeperTest {
         LockKeeper lockKeeper = new LockKeeper(10, Bank.class, Subject.class, Payment.class);
         
         Random rnd = new Random();
-        StatsBuilder<Integer> sb = new StatsBuilder<>();
         
         List<Bank> banks = Stream.generate(() -> Helper.generateBank(rnd)).limit(BANKS)
                 .collect(Collectors.toList());        
@@ -55,6 +54,7 @@ public class LockKeeperTest {
         ExecutorService es = Executors.newFixedThreadPool(THREADS);
             
         for (int i = 0; i < 5; i++) {
+            StatsBuilder<Integer> sb = new StatsBuilder<>();
             final int ii = i;
             payments.forEach(p -> {
                 tasks.add(es.submit(() -> {

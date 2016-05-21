@@ -4,6 +4,7 @@ import static java.lang.Thread.currentThread;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -44,8 +45,6 @@ public class LockKeeperV2 {
      * 
      * TODO: make locks reentrant
      * TODO: implement readlock
-     * TODO: instead of choosing segment by particular type, 
-     *       search for the closest supertype (e. g. ArrayList -> List)
      */
     
     final int mask;
@@ -60,18 +59,25 @@ public class LockKeeperV2 {
      *        E. g. "10" means "1024 stripes"
      * @param classes classes for which separate segments (stripe sets)
      *        should be created. Total number of stripes will be 
-     *        (|classes| + 1) * 2<sup>segmentSizeLog</sup>
+     *        (|classes| + 1) * 2<sup>segmentSizeLog</sup>. Only classes
+     *        are accepted, attempt to pass an iterface will cause
+     *        <tt>IllegalArgumentException</tt>
      */
     public LockKeeperV2(int segmentSizeLog, Class<?>... classes) {
         mask = (1 << segmentSizeLog) - 1;
         int size = mask + 1;
         if (classes.length > 0) {
-            shiftsForClasses = new HashMap<>();
-            for (Class<?> cl : classes)
-                shiftsForClasses.put(cl, (mask + 1) * (shiftsForClasses.size() + 1));
-            size *= shiftsForClasses.size() + 1;
-        } else 
-            shiftsForClasses = null;        
+            Map<Class<?>, Integer> shifts = new HashMap<>();
+            for (Class<?> cl : classes) {
+                if (cl.isInterface())
+                    throw new IllegalArgumentException("Class " + cl.getName() + " is an interface, not a class");
+                shifts.put(cl, (mask + 1) * (shifts.size() + 1));
+            }
+            size *= shifts.size() + 1;
+            shiftsForClasses = Collections.unmodifiableMap(shifts);
+        } else {
+            shiftsForClasses = null;     
+        }
         stripes = new AtomicIntegerArray(size);
     }
     
@@ -86,6 +92,9 @@ public class LockKeeperV2 {
     }
       
     
+    /**
+     * Returns exclusive (write) lock in a locked state for a given object
+     */
     public Lock lockAndGet(Object o) throws InterruptedException {
         return lockAndGet(LockType.WRITE, new Object[]{o});
     }
@@ -97,12 +106,14 @@ public class LockKeeperV2 {
     }
     
     
+    /**
+     * Returns exclusive (write) lock in a locked state for all given objects
+     */
     public Lock lockAndGet(Object... objects) throws InterruptedException {
         return lockAndGet(LockType.WRITE, objects);
-    }
+    }    
     
-    
-    
+   
     public Lock lockAndGet(LockType lockType, Object... objects) 
                                               throws InterruptedException {
         int[] locks = collectLocks(objects);
@@ -114,8 +125,7 @@ public class LockKeeperV2 {
             LockSupport.park();         // this won't block 
             while (!w.allAcquired) {
                 LockSupport.park();
-                if (currentThread().isInterrupted())
-                    // TODO: release locks if any are held
+                if (Thread.interrupted())
                     throw new InterruptedException();
             }
         }
@@ -145,15 +155,20 @@ public class LockKeeperV2 {
     int stripeForObject(Object o) {
         if (o == null)
             return 0;
-        int shift = shiftsForClasses == null 
-              ? 0 : shiftsForClasses.getOrDefault(o.getClass(), 0);  // TODO: search for the closest supertype
+        Class<?> cl = o.getClass();
+        Integer shift = null;
+        while (cl != Object.class && (shift = shiftsForClasses.get(cl)) == null)
+            cl = cl.getSuperclass();
+        if (shift == null)
+            shift = 0;
         return shift + (o.hashCode() & mask);
     } 
     
-    
+
     
     Thread tryGetLocks(final int[] locks, boolean precheck) {       
         // acquisition of locks is performed in two stages:
+        
         // 1) reservation stage, where each lock is "reserved",
         //    then tested if it can be acquired. This is a place 
         //    where lock-freeness is violated: before reservation, 
@@ -278,7 +293,7 @@ public class LockKeeperV2 {
     public class CompositeLock implements Lock {
 
         private static final String UNSUPPORTED_MSG 
-                = "This lock is in locked state when obtained by LockKeeper#lockAndGet method";
+                = "This lock is in locked state when obtained by lockAndGet()";
         
         final int[] keptLocks;
         

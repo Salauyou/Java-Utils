@@ -140,17 +140,15 @@ public class Model {
     
     //===============================================//
     
-    public static class Subject implements Entity<String> {
+    public static class Subj implements Entity<String> {
 
         private String bicAccount;
         private String name;
         private Bank bank;
-        
-        public static String TYPE = "Subject";
                 
-        public Subject() {}       
+        public Subj() {}       
        
-        public Subject(String bicAccount) {
+        public Subj(String bicAccount) {
             this.bicAccount = bicAccount;
         }
         
@@ -166,7 +164,7 @@ public class Model {
 
         @Override
         public String getType() {
-            return TYPE;
+            return "Subj";
         }
 
         @Override
@@ -190,6 +188,22 @@ public class Model {
             this.bank = bank;
         }
 
+    }
+    
+    
+    public static class Subject extends Subj {
+        
+        public Subject() {}       
+        
+        public Subject(String bicAccount) {
+            super(bicAccount);
+        }
+        
+        @Override
+        public String getType() {
+            return "Subject";
+        }
+        
     }
     
 }
