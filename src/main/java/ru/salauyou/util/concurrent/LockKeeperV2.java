@@ -155,13 +155,15 @@ public class LockKeeperV2 {
     int stripeForObject(Object o) {
         if (o == null)
             return 0;
-        Class<?> cl = o.getClass();
-        Integer shift = null;
-        while (cl != Object.class && (shift = shiftsForClasses.get(cl)) == null)
-            cl = cl.getSuperclass();
-        if (shift == null)
-            shift = 0;
-        return shift + (o.hashCode() & mask);
+        Integer sh = null;
+        if (shiftsForClasses != null) {
+            Class<?> cl = o.getClass();
+            while (cl != Object.class && (sh = shiftsForClasses.get(cl)) == null)
+                cl = cl.getSuperclass();
+        }
+        if (sh == null)
+            sh = 0;
+        return sh + (o.hashCode() & mask);
     } 
     
 
