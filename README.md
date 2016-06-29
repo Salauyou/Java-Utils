@@ -39,6 +39,12 @@ utility to work with beans. Now, it has only one method `BeahHelper.cloneOf()`
 which deeply clones a bean with nested hirerarchy without using serialization.
 
 --
+[`MinMaxHeapDeque`](src/main/java/ru/salauyou/util/collect/MinMaxHeapDeque.java) — 
+double-ended priority queue based on [min-max heap](https://en.wikipedia.org/wiki/Min-max_heap). 
+Unlike Guava's [`MinMaxPriorityQueue`]
+(https://google.github.io/guava/releases/snapshot/api/docs/com/google/common/collect/MinMaxPriorityQueue.html),
+it fully implements `Deque` interface.
+
 [`ExpirableMap`](src/main/java/ru/salauyou/util/collect/ExpirableMap.java) — 
 synchronized `Map<K, V>` decorator, where every entry has specified 
 expiration time which is measured from the moment the entry was put 
