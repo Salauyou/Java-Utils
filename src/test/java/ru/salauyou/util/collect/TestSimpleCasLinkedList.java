@@ -1,4 +1,4 @@
-package tests.collect;
+package ru.salauyou.util.collect;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;

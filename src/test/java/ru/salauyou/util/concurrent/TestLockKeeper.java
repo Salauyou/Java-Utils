@@ -1,4 +1,4 @@
-package tests.concurrent;
+package ru.salauyou.util.concurrent;
 
 import static org.junit.Assert.assertTrue;
 
@@ -15,15 +15,15 @@ import java.util.stream.Stream;
 
 import org.junit.Test;
 
-import ru.salauyou.util.concurrent.LockKeeper;
+import helpers.Helper;
+import helpers.Model.Bank;
+import helpers.Model.Payment;
+import helpers.Model.Subject;
 import ru.salauyou.util.misc.StatsBuilder;
-import tests.Helper;
-import tests.Model.Bank;
-import tests.Model.Payment;
-import tests.Model.Subject;
 
 
-public class LockKeeperTest {
+
+public class TestLockKeeper {
 
     
     static final int PAYERS = 1000;

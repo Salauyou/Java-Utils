@@ -1,6 +1,8 @@
-package tests.mapper;
+package ru.salauyou.util.mapper;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -13,10 +15,10 @@ import java.util.List;
 
 import org.junit.Test;
 
+import helpers.Model.Payment;
 import ru.salauyou.util.mapper.Annotations.MapTo;
 import ru.salauyou.util.mapper.Annotations.PostMapping;
-import ru.salauyou.util.mapper.EntityMapper;
-import tests.Model.Payment;
+
 
 public class TestMapper {
 

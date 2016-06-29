@@ -1,4 +1,4 @@
-package tests.misc;
+package ru.salauyou.util.misc;
 
 import static org.junit.Assert.assertEquals;
 
@@ -7,8 +7,6 @@ import java.util.Random;
 import java.util.stream.Stream;
 
 import org.junit.Test;
-
-import ru.salauyou.util.misc.StatsBuilder;
 
 public class TestStatsBuilder {
     

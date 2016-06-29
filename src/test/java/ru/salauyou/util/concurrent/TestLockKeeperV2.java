@@ -1,4 +1,4 @@
-package tests.concurrent;
+package ru.salauyou.util.concurrent;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,16 +13,16 @@ import java.util.stream.Stream;
 
 import org.junit.Test;
 
-import ru.salauyou.util.concurrent.LockKeeperV2;
+import helpers.Helper;
+import helpers.Model.Bank;
+import helpers.Model.Payment;
+import helpers.Model.Subj;
+import helpers.Model.Subject;
 import ru.salauyou.util.misc.StatsBuilder;
-import tests.Helper;
-import tests.Model.Bank;
-import tests.Model.Payment;
-import tests.Model.Subj;
-import tests.Model.Subject;
 
 
-public class LockKeeperV2Test {
+
+public class TestLockKeeperV2 {
 
     
     static final int PAYERS    = 1000;

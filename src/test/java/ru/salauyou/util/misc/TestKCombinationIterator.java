@@ -1,4 +1,4 @@
-package tests.misc;
+package ru.salauyou.util.misc;
 
 import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
@@ -8,8 +8,6 @@ import java.util.Collection;
 import java.util.List;
 
 import org.junit.Test;
-
-import ru.salauyou.util.misc.KCombinationIterator;
 
 public class TestKCombinationIterator {
 

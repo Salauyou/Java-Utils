@@ -1,13 +1,15 @@
-package tests;
+package helpers;
 
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 import java.util.Random;
 
-import tests.Model.Bank;
-import tests.Model.Payment;
-import tests.Model.Subject;
+import helpers.Model.Bank;
+import helpers.Model.Payment;
+import helpers.Model.Subject;
+
+
 
 public class Helper {
 
