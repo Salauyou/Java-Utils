@@ -176,6 +176,28 @@ public class TestMinMaxHeapDeque {
   }
   
   
+  @Test
+  public void testCollectionConstructor() {
+    Deque<Integer> q = new MinMaxHeapDeque<>(Arrays.asList(9, 8, 7, 6, 5, 4, 3, 2, 1, 0));
+    assertEquals(10, q.size());
+    assertEquals((Integer) 0, q.peek());
+    assertEquals((Integer) 9, q.peekLast());
+    
+    int size = 100;
+    List<Integer> ordered = IntStream.range(0, size).boxed().collect(Collectors.toList());
+    Collections.reverse(ordered);
+    List<Integer> shuffled = new ArrayList<>(ordered);
+    Collections.shuffle(shuffled);
+    q = new MinMaxHeapDeque<>(shuffled, Collections.reverseOrder());
+    List<Integer> res = new ArrayList<>();
+    Integer e;
+    while ((e = q.poll()) != null) {
+      res.add(e);
+    }
+    assertTrue(q.isEmpty());
+    assertEquals(ordered, res);
+  }
+  
   
   @SafeVarargs
   static <T extends Comparable<? super T>> MinMaxHeapDeque<T> ofItems(T... items) {

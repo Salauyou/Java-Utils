@@ -23,11 +23,7 @@ import java.util.SortedSet;
  */
 public class MinMaxHeapDeque<E> extends AbstractDeque<E> {
 
-  // TODO: 
-  //   1) test ALL constructors
-  //   2) optimal implementation of `addAll()` 
-  //      and collection-arg constructor (heapify)
-  //   3) iteratorless implementation of `remove()`
+  // TODO: iteratorless implementation of `remove()`
   
   
   /** Zero-based heap array */
@@ -80,10 +76,10 @@ public class MinMaxHeapDeque<E> extends AbstractDeque<E> {
         return;
       }
     } 
-    this.heap = new ArrayList<>(c.size());
+    this.heap = new ArrayList<>(c);
     this.cmp = cmp;
-    for (E e : c) {
-      offer(e);
+    for (int i = heap.size() - 1; i >= 0; i--) {
+      moveDown(i, isMinLevel(i));
     }
   }
   
