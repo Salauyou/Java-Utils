@@ -25,10 +25,9 @@ public class MinMaxHeapDeque<E> extends AbstractDeque<E> {
 
   // TODO: 
   //   1) test ALL constructors
-  //   2) ensure stable ordering
-  //   3) optimal implementation of `addAll()` 
+  //   2) optimal implementation of `addAll()` 
   //      and collection-arg constructor (heapify)
-  //   4) iteratorless implementation of `remove()`
+  //   3) iteratorless implementation of `remove()`
   
   
   /** Zero-based heap array */
@@ -174,7 +173,7 @@ public class MinMaxHeapDeque<E> extends AbstractDeque<E> {
     E e = heap.get(i);
     while ((g = grandParent(i)) >= 0) {
       int cmp = compare(e, heap.get(g));
-      if (min ? cmp >= 0 : cmp <= 0) {
+      if (min ? cmp > 0 : cmp < 0) {
         break;
       }
       swap(g, i);
@@ -239,16 +238,16 @@ public class MinMaxHeapDeque<E> extends AbstractDeque<E> {
       }
       int cmp = compare(heap.get(p), heap.get(i));
       if (i == grandParent(p)) {
-        if (min ? cmp <= 0 : cmp >= 0) {
+        if (min ? cmp < 0 : cmp > 0) {
           swap(i, p);
           int pr = parent(p);
           int c = compare(heap.get(p), heap.get(pr));
-          if (min ? c >= 0 : c <= 0) {
+          if (min ? c > 0 : c < 0) {
             swap(p, pr);
           }
         }
       } else {
-        if (min ? cmp <= 0 : cmp >= 0) {
+        if (min ? cmp < 0 : cmp > 0) {
           swap(i, p);
           return;
         }
