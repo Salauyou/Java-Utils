@@ -1,5 +1,6 @@
 package ru.salauyou.util.collect;
 
+import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
@@ -93,13 +94,31 @@ public class MinMaxHeapDeque<E> extends AbstractDeque<E> {
    * and comparator taken from provided {@code SortedSet}
    */
   public MinMaxHeapDeque(SortedSet<? extends E> c) {
-    this.heap = new ArrayList<E>(c.size());
+    int size = c.size();
+    final List<E> es = new ArrayBackedList<>(size);
+    int i = 0;
+    for (E e : c) {
+      if (i < 0) {
+        throw new AssertionError();
+      }
+      es.set(i, e);
+      i = nextIndex(i, size);
+    }
+    this.heap = new ArrayList<E>(es);  // set `ArrayList` elementData directly
     @SuppressWarnings("unchecked")
     Comparator<? super E> cmp = (Comparator<? super E>) c.comparator();
     this.cmp = cmp;
-    for (E e : c) {
-      offer(e);
-    }
+  }
+  
+  
+  static class ArrayBackedList<T> extends AbstractList<T> {
+    final T[] arr;    
+    @SuppressWarnings("unchecked")
+    ArrayBackedList(int size) { this.arr = (T[]) new Object[size]; }
+    @Override public T set(int index, T e) { arr[index] = e; return null; }
+    @Override public T get(int index) { return arr[index]; }
+    @Override public int size() { return arr.length; }
+    @Override public Object[] toArray() { return arr; }
   }
   
   

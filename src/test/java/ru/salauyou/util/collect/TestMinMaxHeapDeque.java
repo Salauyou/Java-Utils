@@ -11,6 +11,8 @@ import java.util.Deque;
 import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -124,7 +126,7 @@ public class TestMinMaxHeapDeque {
   
   
   @Test
-  public void generateSequence() {
+  public void testGenerateSequence() {
     Integer[][] sequences = new Integer[][] {
       { 0 },
       { 0, 1 },
@@ -156,6 +158,23 @@ public class TestMinMaxHeapDeque {
       }
     }
   }
+  
+  
+  @Test
+  public void testSortedSetConstructor() {
+    SortedSet<Integer> ss = new TreeSet<>(Collections.reverseOrder());
+    ss.addAll(Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9));
+    Deque<Integer> q = new MinMaxHeapDeque<>(ss);
+    assertEquals((Integer) 9, q.peek());
+    assertEquals((Integer) 1, q.peekLast());
+    q.offer(10);
+    q.offer(0);
+    assertEquals((Integer) 10, q.poll());
+    assertEquals((Integer) 9, q.poll());
+    assertEquals((Integer) 0, q.pollLast());
+    assertEquals((Integer) 1, q.pollLast());
+  }
+  
   
   
   @SafeVarargs
