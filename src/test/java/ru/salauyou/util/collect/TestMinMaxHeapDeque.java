@@ -42,7 +42,7 @@ public class TestMinMaxHeapDeque {
     assertEquals((Integer) 9, q.peekLast());
     
     q = new MinMaxHeapDeque<>();
-    int size = 50;
+    int size = 100_000;
     List<Integer> items = IntStream.range(0, size).boxed().collect(Collectors.toList());
     Collections.shuffle(items);
     q.addAll(items);
