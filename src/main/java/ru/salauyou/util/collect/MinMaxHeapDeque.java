@@ -1,10 +1,13 @@
 package ru.salauyou.util.collect;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Objects;
+import java.util.SortedSet;
 
 /**
  * Implementation of a priority deque based on min-max heap:
@@ -17,20 +20,90 @@ import java.util.Objects;
  *
  * @param <E>
  */
-public class MinMaxHeapDeque<E extends Comparable<? super E>> 
-        extends AbstractDeque<E> {
+public class MinMaxHeapDeque<E> extends AbstractDeque<E> {
 
   // TODO: 
-  //   1) collection-arg and comparator-arg constructors
+  //   1) test ALL constructors
   //   2) ensure stable ordering
   //   3) optimal implementation of `addAll()` 
-  //      and collection-arg constructor 
+  //      and collection-arg constructor (heapify)
   //   4) iteratorless implementation of `remove()`
   
   
   /** Zero-based heap array */
-  final List<E> heap = new ArrayList<>();
+  final List<E> heap;
   
+  final Comparator<? super E> cmp;
+  
+  
+  // --------- constructors --------- //
+ 
+  
+  /**
+   * Creates an empty natural-ordered {@code MinMaxHeapDeque}
+   */
+  public MinMaxHeapDeque() {
+    this((Comparator<? super E>) null);
+  }
+  
+  
+  /**
+   * Creates an empty {@code MinMaxHeapDeque} which will use
+   * provided comparator for ordering
+   */
+  public MinMaxHeapDeque(Comparator<? super E> cmp) {
+    this.heap = new ArrayList<>();
+    this.cmp = cmp;
+  }
+  
+  
+  /**
+   * Creates a natural-ordered {@code MinMaxHeapDeque} initialized 
+   * by provided elements
+   */
+  public MinMaxHeapDeque(Collection<? extends E> c) {
+    this(c, null);
+  }
+  
+  
+  /**
+   * Creates a {@code MinMaxHeapDeque} initialized 
+   * by provided elements and comparator
+   */
+  public MinMaxHeapDeque(Collection<? extends E> c, Comparator<? super E> cmp) {
+    if (c instanceof MinMaxHeapDeque) {
+      @SuppressWarnings("unchecked")
+      Comparator<? super E> comp = ((MinMaxHeapDeque<E>) c).cmp;
+      if (comp == cmp) {
+        this.heap = new ArrayList<>(((MinMaxHeapDeque<? extends E>) c).heap);
+        this.cmp = comp;
+        return;
+      }
+    } 
+    this.heap = new ArrayList<>(c.size());
+    this.cmp = cmp;
+    for (E e : c) {
+      offer(e);
+    }
+  }
+  
+  
+  /**
+   * Creates a {@code MinMaxHeapDeque} initialized by elements
+   * and comparator taken from provided {@code SortedSet}
+   */
+  public MinMaxHeapDeque(SortedSet<? extends E> c) {
+    this.heap = new ArrayList<E>(c.size());
+    @SuppressWarnings("unchecked")
+    Comparator<? super E> cmp = (Comparator<? super E>) c.comparator();
+    this.cmp = cmp;
+    for (E e : c) {
+      offer(e);
+    }
+  }
+  
+  
+  // ----------- `Deque` implementation ---------- //
   
   @Override
   public int size() {
@@ -56,11 +129,18 @@ public class MinMaxHeapDeque<E extends Comparable<? super E>>
   }
   
   
+  @SuppressWarnings("unchecked")
+  int compare(E e1, E e2) {
+    return cmp == null 
+        ? ((Comparable<E>) e1).compareTo(e2) 
+        : cmp.compare(e1, e2);
+  }
+  
   void moveUp(int i) {
     int p = parent(i);
     E pe = heap.get(p);
     boolean min = isMinLevel(i);
-    int cmp = heap.get(i).compareTo(pe);
+    int cmp = compare(heap.get(i), pe);
     if (min ? cmp > 0 : cmp < 0) {
       swap(i, p);
       moveUp(p, !min);
@@ -74,7 +154,7 @@ public class MinMaxHeapDeque<E extends Comparable<? super E>>
     int g;
     E e = heap.get(i);
     while ((g = grandParent(i)) >= 0) {
-      int cmp = e.compareTo(heap.get(g));
+      int cmp = compare(e, heap.get(g));
       if (min ? cmp >= 0 : cmp <= 0) {
         break;
       }
@@ -138,12 +218,12 @@ public class MinMaxHeapDeque<E extends Comparable<? super E>>
       if (p < 0) {
         return;
       }
-      int cmp = heap.get(p).compareTo(heap.get(i));
+      int cmp = compare(heap.get(p), heap.get(i));
       if (i == grandParent(p)) {
         if (min ? cmp <= 0 : cmp >= 0) {
           swap(i, p);
           int pr = parent(p);
-          int c = heap.get(p).compareTo(heap.get(pr));
+          int c = compare(heap.get(p), heap.get(pr));
           if (min ? c >= 0 : c <= 0) {
             swap(p, pr);
           }
@@ -176,7 +256,7 @@ public class MinMaxHeapDeque<E extends Comparable<? super E>>
     E e;
     j++;
     if (j < size) {
-      int cmp = (e = heap.get(j)).compareTo(high);
+      int cmp = compare(e = heap.get(j), high);
       if (min ? cmp < 0 : cmp > 0) {
         high = e;
         p = j;
@@ -185,7 +265,7 @@ public class MinMaxHeapDeque<E extends Comparable<? super E>>
       // look among grandchildren
       int g = firstGrandChild(i);
       for (j = g; j < size && j < g + 4; j++) {
-        cmp = (e = heap.get(j)).compareTo(high);
+        cmp = compare(e = heap.get(j), high);
         if (min ? cmp < 0 : cmp > 0) {
           high = e;
           p = j;
@@ -213,7 +293,7 @@ public class MinMaxHeapDeque<E extends Comparable<? super E>>
     } else if (size == 1) {
       return 0;
     } else {
-      return (size > 2 && heap.get(2).compareTo(heap.get(1)) > 0) 
+      return (size > 2 && compare(heap.get(2), heap.get(1)) > 0) 
            ? 2 : 1;
     }
   }
@@ -304,6 +384,8 @@ public class MinMaxHeapDeque<E extends Comparable<? super E>>
   }
   
   
+  // ---------- iterator ------------ //
+  
   class HeapItr implements Iterator<E> {
     
     int i = 0;
@@ -329,7 +411,6 @@ public class MinMaxHeapDeque<E extends Comparable<? super E>>
       nextCalled = true;
       return MinMaxHeapDeque.this.heap.get(i);
     }
-    
 
     @Override
     public void remove() {
