@@ -75,7 +75,7 @@ final class BeanMapper<S, D> implements Mapper<S, D> {
         try {
           Object p = pm.mapper.apply(s);
           if (p != null) {
-            pm.setter.invoke(res, p);
+            pm.apply(res, p);
             changed = true;
           } else {
             reportNullMapping(cl, prop, pm.source);
@@ -135,7 +135,10 @@ final class BeanMapper<S, D> implements Mapper<S, D> {
       List<PropMapper> pms = propMappers.computeIfAbsent(type, c -> new ArrayList<>());
       if (rest == null) {  // simple property
         PropertyDescriptor pd = getPropDescriptor(type, first);
-        pms.add(new PropMapper(first, mapper, source, pd.getWriteMethod()));
+        PropMapper pm = pd.getWriteMethod() == null 
+            ? new PropMapper(first, mapper, source, pd.getReadMethod(), true)
+            : new PropMapper(first, mapper, source, pd.getWriteMethod());
+        pms.add(pm);
       } else {  // nested property
         PropMapper pm = findOrCreateMapper(type, first);
         ((BeanMapper<S, ?>) pm.mapper)
@@ -194,7 +197,9 @@ final class BeanMapper<S, D> implements Mapper<S, D> {
     } else {
       PropertyDescriptor pd = getPropDescriptor(type, prop);
       Mapper<? super S, ?> m = new BeanMapper<>(pd.getPropertyType(), entityMapper);
-      PropMapper pm = new PropMapper(prop, m, "", pd.getWriteMethod());
+      PropMapper pm = pd.getWriteMethod() == null 
+          ? new PropMapper(prop, m, "", pd.getReadMethod(), true)
+          : new PropMapper(prop, m, "", pd.getWriteMethod());
       pms.add(pm);
       return pm;
     }
@@ -211,17 +216,22 @@ final class BeanMapper<S, D> implements Mapper<S, D> {
       Optional<PropertyDescriptor> pd 
           = Stream.of(Introspector.getBeanInfo(clazz).getPropertyDescriptors())
                .filter(d -> d.getName().equals(prop))
-               .filter(d -> d.getWriteMethod() != null)
                .findAny();
-      if (!pd.isPresent()) {
-        throw new NoSuchFieldException(String.format("'%s' in %s", prop, clazz));
+      if (pd.isPresent()) {
+        PropertyDescriptor d = pd.get();
+        // if there is no property setter, check if type 
+        // is `Collection` (i. e. in JAXB)
+        if (d.getWriteMethod() != null 
+            || (Collection.class.isAssignableFrom(d.getPropertyType()))) {
+          return d;
+        }
       }
-      return pd.get();
+      throw new NoSuchFieldException(String.format("'%s' in %s", prop, clazz));
     } catch (IntrospectionException e) {
       throw new RuntimeException("Cannot introspect class " + clazz, e);
     }
-
   }
+  
 
   static final Pattern PROPERTY_NAME 
           = Pattern.compile("[a-z][_$0-9a-zA-Z]*(?:\\.[a-z][_$0-9a-zA-Z]*)*");
@@ -272,16 +282,33 @@ final class BeanMapper<S, D> implements Mapper<S, D> {
     final String prop;   // property
     final String source; // where this mapping came from
     final Method setter;
+    final Method collectionGetter; // for no-setter collections (i. e. in JAXB)
 
+    PropMapper(String prop, Mapper<? super S, ?> mapper, 
+            String source, Method setter) {
+      this(prop, mapper, source, setter, false);
+    }
+    
     @SuppressWarnings("unchecked")
     PropMapper(String prop, Mapper<? super S, ?> mapper,
-            String source, Method setter) {
+            String source, Method accessor, boolean notSettableCollection) {
       this.mapper = (Mapper<? super S, Object>) mapper;
       this.prop = prop;
       this.source = source;
-      this.setter = setter;
+      this.setter = notSettableCollection ? null : accessor;
+      this.collectionGetter = notSettableCollection ? accessor : null;
     }
 
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    void apply(Object dest, Object value) throws Exception {
+      if (setter != null) {
+        setter.invoke(dest, value);
+      } else {
+        Collection<?> c = (Collection<?>) collectionGetter.invoke(dest);
+        c.addAll((Collection) value);
+      }
+    }
+     
     @Override
     public String toString() {
       return String.format("Mapper(%s.%s)",
