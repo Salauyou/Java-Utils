@@ -21,7 +21,7 @@ public class Annotations {
     @Target({ ElementType.FIELD, ElementType.METHOD })
     @Retention(RetentionPolicy.RUNTIME)
     public @interface ApplyIf {
-        Class<?> value();
+        Class<?>[] value();
     }
 
     

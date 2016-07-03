@@ -20,7 +20,7 @@ import ru.salauyou.util.mapper.Annotations.MapTo;
 import ru.salauyou.util.mapper.Annotations.PostMapping;
 
 
-public class TestMapper {
+public class TestMapperSimple {
 
     
     
