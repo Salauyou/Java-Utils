@@ -153,9 +153,11 @@ public abstract class EntityMapper<S, D> implements Mapper<S, D> {
 
 
   public final <T> Mapping<T> map(String property) {
-    return new Mapping<>(currentPrefix.isEmpty()
-        ? property
-        : (currentPrefix + "." + property));
+    StringBuilder prop = new StringBuilder(currentPrefix);
+    if (!currentPrefix.isEmpty() && !property.isEmpty()) {
+      prop.append('.');
+    }
+    return new Mapping<>(prop.append(property).toString());
   }
 
 
@@ -190,7 +192,9 @@ public abstract class EntityMapper<S, D> implements Mapper<S, D> {
      */
     public <R> Mapping<R> from(Mapper<? super S, ? extends R> mapper) {
       String source = "";
-      // find code line responsible for mapping
+      // find in user mapper class line of code responsible 
+      // for particular mapping, so when we report mapping error later, 
+      // we're able to give a link to that line
       Iterator<StackTraceElement> i 
           = Arrays.asList(Thread.currentThread().getStackTrace()).iterator();
       while (i.hasNext() && !i.next().getMethodName().equals("from"));
