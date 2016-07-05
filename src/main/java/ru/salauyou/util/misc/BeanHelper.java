@@ -6,10 +6,18 @@ import java.beans.PropertyDescriptor;
 import java.lang.reflect.Array;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.MonthDay;
+import java.time.OffsetDateTime;
+import java.time.OffsetTime;
+import java.time.Period;
+import java.time.Year;
+import java.time.YearMonth;
+import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.Arrays;
 import java.util.Collection;
@@ -53,7 +61,9 @@ public class BeanHelper {
       Integer.class, Long.class, Double.class, Float.class, Byte.class,
       Character.class, Short.class, Boolean.class, BigDecimal.class,
       BigInteger.class, String.class, LocalDate.class, LocalTime.class,
-      LocalDateTime.class, Instant.class, ZonedDateTime.class));
+      LocalDateTime.class, Instant.class, ZonedDateTime.class, Duration.class,
+      MonthDay.class, OffsetDateTime.class, OffsetTime.class, Period.class,
+      Year.class, YearMonth.class, ZoneOffset.class));
 
   final static Set<String> SKIPPED_PROPS = new HashSet<>(Arrays.asList("class"));
 
