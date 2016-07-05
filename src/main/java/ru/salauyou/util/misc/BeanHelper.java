@@ -21,6 +21,7 @@ import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
@@ -39,7 +40,7 @@ public class BeanHelper {
    * Creates a deep clone of given bean.
    * <p>
    * This method tries to create a new bean of the same type using default
-   * no-arg constructor, then, take each property accessible by public
+   * no-arg constructor, then take each property accessible by public
    * {@code getXxx()} getter method, clone it if necessary, and set to a target
    * bean using corresponding {@code setXxx()} setter, or, if a property is of
    * collection type and does not have direct setter, using
@@ -47,12 +48,11 @@ public class BeanHelper {
    * <p>
    * Primitive types and wrappers, enum types, {@link java.lang.String} and
    * {@link java.time} immutable instances are copied directly.
-   * {@link java.util.Date} instances and primitive arrays are cloned, reference
-   * arrays are deeply cloned. {@link java.util.Collection} and
-   * {@link java.util.Map} types are cloned by instantiating a collection/map of
-   * the same type via no-arg constructor and filling it using
-   * {@code add()/put()}. Other types are cloned recursively as beans appliying
-   * the same rules to their properties.
+   * {@link java.util.Date} instances are cloned, arrays are cloned,
+   * {@link java.util.Collection} and {@link java.util.Map} types are cloned by
+   * instantiating a collection/map of the same type via no-arg constructor and
+   * filling it using {@code add()/put()}. Other types are cloned recursively as
+   * beans appliying the same rules to their properties.
    */
   public static <E> E cloneOf(E bean) {
     return cloneInternally(bean, new IdentityHashMap<>());
@@ -65,86 +65,69 @@ public class BeanHelper {
       BigInteger.class, String.class, LocalDate.class, LocalTime.class,
       LocalDateTime.class, Instant.class, ZonedDateTime.class, Duration.class,
       MonthDay.class, OffsetDateTime.class, OffsetTime.class, Period.class,
-      Year.class, YearMonth.class, ZoneOffset.class));
+      Year.class, YearMonth.class, ZoneOffset.class,
+      Collections.emptyList().getClass(), Collections.emptySet().getClass(),
+      Collections.emptyMap().getClass()));
 
   final static Set<String> SKIPPED_PROPS = new HashSet<>(Arrays.asList("class"));
 
+  
   /** Static cache where property descriptors are kept for classes */
   final static Map<Class<?>, PropertyDescriptor[]> PDS_CACHE = new ConcurrentHashMap<>();
-
-  final static Set<Class<?>> CLONEABLES = new HashSet<>(Arrays.asList(
-      Date.class, int[].class, long[].class, double[].class, float[].class, 
-      byte[].class, char[].class, short[].class, boolean[].class));
-  
 
   
   @SuppressWarnings("unchecked")
   static private <E> E cloneInternally(E source, Map<Object, Object> visited) {
-    if (source == null)
+    if (source == null) {
       return null;
+    }
     Class<?> clazz = source.getClass();
-    if (clazz.isEnum() || IMMUTABLES.contains(clazz))
+    if (clazz.isEnum() || IMMUTABLES.contains(clazz)) {
       return source;
+    } 
     if (clazz == Date.class) {
       return (E) ((Date) source).clone();
-    }
+    } 
     if (visited.containsKey(source)) {
       return (E) visited.get(source);
     }
-    if (CLONEABLES.contains(clazz)) {
-      try {
-        E copy = (E) clazz.getMethod("clone").invoke(source);
-        visited.put(source, copy);
-        return copy;
-      } catch (NoSuchMethodException nsm) {
-        throw new AssertionError();
-      } catch (ReflectiveOperationException e) {
-        e.printStackTrace();
-        return null;
-      }
-    }
     if (clazz.isArray()) {
-      final Class<?> compCl = clazz.getComponentType();
-      final Object[] srcArr = (Object[]) source;
-      int size = srcArr.length;
-      final Object[] copy = (Object[]) Array.newInstance(compCl, size);
+      final int size = Array.getLength(source);
+      Object copy = Array.newInstance(clazz.getComponentType(), size);
       visited.put(source, copy);
       for (int i = 0; i < size; i++) {
-        copy[i] = cloneInternally(srcArr[i], visited);
+        Object o = cloneInternally(Array.get(source, i), visited);
+        Array.set(copy, i, o);
       }
-    }
+      return (E) copy;
+    } 
     try {
-      final E copy = (E) clazz.newInstance();
+      Object copy = clazz.newInstance();
       visited.put(source, copy);
-      PropertyDescriptor[] pds = PDS_CACHE.get(clazz);
-      if (pds == null) {
-        pds = Introspector.getBeanInfo(clazz).getPropertyDescriptors();
-        PDS_CACHE.put(clazz, pds);
-      }
-      for (PropertyDescriptor d : pds) {
-        try {
-          if (SKIPPED_PROPS.contains(d.getName()))
-            continue;
-          Object o = d.getReadMethod().invoke(source);
-          if (o == null) {
-            continue;
-          }
-          Object c = null;
-          if (o instanceof Collection) {
-            final Collection<Object> k 
-                = (Collection<Object>) o.getClass().newInstance();
-            ((Collection<?>) o).forEach(e -> k.add(cloneInternally(e, visited)));
-            c = k;
-          } else if (o instanceof Map) {
-            final Map<Object, Object> m 
-                = (Map<Object, Object>) o.getClass().newInstance();
-            ((Map<?, ?>) o).forEach((k, v) 
-                -> m.put(cloneInternally(k, visited), cloneInternally(v, visited)));
-            c = m;
-          } else {
-            c = cloneInternally(o, visited);
-          }
-          if (c != null) {
+      if (Collection.class.isAssignableFrom(clazz)) {
+        Collection<Object> c = (Collection<Object>) copy;
+        ((Collection<Object>) source).forEach(e 
+            -> c.add(cloneInternally(e, visited)));
+      } else if (Map.class.isAssignableFrom(clazz)) {
+        Map<Object, Object> m = (Map<Object, Object>) copy;
+        ((Map<?, ?>) source).forEach((k, v) 
+            -> m.put(cloneInternally(k, visited), cloneInternally(v, visited)));
+      } else {
+        PropertyDescriptor[] pds = PDS_CACHE.get(clazz);
+        if (pds == null) {
+          pds = Introspector.getBeanInfo(clazz).getPropertyDescriptors();
+          PDS_CACHE.put(clazz, pds);
+        }
+        for (PropertyDescriptor d : pds) {
+          try {
+            if (SKIPPED_PROPS.contains(d.getName())) {
+              continue;
+            }
+            Object c;
+            Object o = d.getReadMethod().invoke(source);
+            if (o == null || (c = cloneInternally(o, visited)) == null) {
+              continue;
+            }
             if (d.getWriteMethod() != null) {
               d.getWriteMethod().invoke(copy, c);
             } else if (Collection.class.isAssignableFrom(d.getPropertyType())) {
@@ -152,13 +135,12 @@ public class BeanHelper {
                   = (Collection<Object>) d.getReadMethod().invoke(copy);
               coll.addAll((Collection<?>) c);
             }
+          } catch (Exception e) {
+            e.printStackTrace();
           }
-        } catch (Exception e) {
-          e.printStackTrace();
         }
       }
-      return copy;
-
+      return (E) copy;
     } catch (ReflectiveOperationException | IntrospectionException e) {
       e.printStackTrace();
       return null;

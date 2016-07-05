@@ -1,11 +1,20 @@
 package ru.salauyou.util.misc;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
 
 import org.junit.Test;
 
@@ -74,20 +83,166 @@ public class TestBeanHelper {
     assertSame(bankTo.getClass(), cBankTo.getClass());
   }
   
+
+  @Test
+  public void testCloneBeanWithArray() {
+    NonTrivialBean b = new NonTrivialBean();
+    b.setName("onlyInts");
+    b.setId(1L);
+    b.setInts(new int[]{ 1, 2, 3 });
+    
+    NonTrivialBean copy = BeanHelper.cloneOf(b);
+    assertNotSame(b, copy);
+    assertNotSame(b.getInts(), copy.getInts());
+    assertEquals(1L, copy.getId());
+    assertEquals("onlyInts", copy.getName());
+    assertArrayEquals(new int[]{ 1, 2, 3 }, copy.getInts());
+    
+    b = new NonTrivialBean();
+    b.setObjects(new NonTrivialBean[]{ b, null, b }); // circular dependency
+    
+    copy = BeanHelper.cloneOf(b);
+    assertNotSame(b, copy);
+    assertNotSame(b.getObjects(), copy.getObjects());
+    assertEquals(3, copy.getObjects().length);
+    assertSame(copy.getObjects()[0], copy);
+    assertNull(copy.getObjects()[1]);
+    assertSame(copy.getObjects()[2], copy);
+    assertEquals(0L, copy.getId());
+    assertNull(copy.getName());
+  }
+  
   
   @Test
-  public void testCloneBeanWithArray() {}
+  public void testCloneBeanWithCollection() {
+    NonTrivialBean b = new NonTrivialBean();
+    b.setList(Collections.emptyList());
+    
+    NonTrivialBean copy = BeanHelper.cloneOf(b);
+    assertNotSame(b, copy);
+    assertNotNull(copy.getList());
+    assertEquals(0, copy.getList().size());
+    
+    b = new NonTrivialBean();
+    b.setList(new ArrayList<>());
+    b.getList().addAll(Arrays.asList(null, b, null)); // circular dependency
+    
+    copy = BeanHelper.cloneOf(b);
+    assertNotSame(b, copy);
+    assertNotSame(b.getList(), copy.getList());
+    assertEquals(3, copy.getList().size());
+    assertNull(copy.getList().get(0));
+    assertSame(copy, copy.getList().get(1));
+    assertNull(copy.getList().get(2));
+  }
+  
+  
+  @Test
+  public void testCloneBeanWithNoSetterCollection() {
+    NonTrivialBean b = new NonTrivialBean();
+    b.setName("b");
+    NonTrivialBean b1 = new NonTrivialBean();
+    b1.setName("b1");
+    NonTrivialBean b2 = new NonTrivialBean();
+    b2.setName("b2");
+    b.getNoSetterList().addAll(Arrays.asList(b, b1, b2, null)); // circular dependency
+    
+    NonTrivialBean copy = BeanHelper.cloneOf(b);
+    assertNotSame(b, copy);
+    assertNotSame(b.getNoSetterList(), copy.getNoSetterList());
+    assertEquals(4, copy.getNoSetterList().size());
+    assertSame(copy, copy.getNoSetterList().get(0));
+    assertNotSame(b1, copy.getNoSetterList().get(1));
+    assertNotSame(b2, copy.getNoSetterList().get(2));
+    assertNull(copy.getNoSetterList().get(3));
+    assertEquals("b", copy.getName());
+    assertEquals("b1", copy.getNoSetterList().get(1).getName());
+    assertEquals("b2", copy.getNoSetterList().get(2).getName());
+  }
   
   
   @Test
   public void testCloneBeanWithMap() {}
   
   
-  @Test
-  public void testCloneBeanWithCollection() {}
   
+
   
-  @Test
-  public void testCloneBeanWithNoSetterCollection() {}
+  static class NonTrivialBean {
+    
+    long id;
+    String name;
+    Map<String, NonTrivialBean> map;
+    List<NonTrivialBean> list;
+    List<NonTrivialBean> noSetterList;
+    NonTrivialBean[] objects;
+    int[] ints;
+    Date date;
+    
+    public long getId() {
+      return id;
+    }
+    
+    public void setId(long id) {
+      this.id = id;
+    }
+    
+    public String getName() {
+      return name;
+    }
+    
+    
+    public void setName(String name) {
+      this.name = name;
+    }
+    
+    public Map<String, NonTrivialBean> getMap() {
+      return map;
+    }
+    
+    public void setMap(Map<String, NonTrivialBean> map) {
+      this.map = map;
+    }
+    
+    public List<NonTrivialBean> getList() {
+      return list;
+    }
+    
+    public void setList(List<NonTrivialBean> list) {
+      this.list = list;
+    }
+    
+    public List<NonTrivialBean> getNoSetterList() {
+      if (noSetterList == null) {
+        noSetterList = new ArrayList<>();
+      }
+      return noSetterList;
+    }
+    
+    public NonTrivialBean[] getObjects() {
+      return objects;
+    }
+    
+    public void setObjects(NonTrivialBean[] objects) {
+      this.objects = objects;
+    }
+    
+    public int[] getInts() {
+      return ints;
+    }
+    
+    public void setInts(int[] ints) {
+      this.ints = ints;
+    }
+    
+    public Date getDate() {
+      return date;
+    }
+    
+    public void setDate(Date date) {
+      this.date = date;
+    }
+  }
+  
   
 }
