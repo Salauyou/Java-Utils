@@ -39,18 +39,20 @@ public class BeanHelper {
    * Creates a deep clone of given bean.
    * <p>
    * This method tries to create a new bean of the same type using default
-   * no-arg constructor, then copy all properties accessible by public
-   * {@code getXxx()} methods from a given source bean to a target bean using
-   * corresponding {@code setXxx()} methods, or, in case of collections without
-   * direct setter, using {@code getXxx().addAll()}.
+   * no-arg constructor, then, take each property accessible by public
+   * {@code getXxx()} getter method, clone it if necessary, and set to a target
+   * bean using corresponding {@code setXxx()} setter, or, if a property is of
+   * collection type and does not have direct setter, using
+   * {@code getXxx().addAll()}.
    * <p>
    * Primitive types and wrappers, enum types, {@link java.lang.String} and
    * {@link java.time} immutable instances are copied directly.
-   * {@link java.util.Date} instances and arrays are cloned.
-   * {@link java.util.Collection} and {@link java.util.Map} types are cloned:
-   * values from source properties are copied to a newly instantiated
-   * collection/map using {@code add()/put()}. Other types are cloned
-   * recursively as beans appliying the same rules for nested properties.
+   * {@link java.util.Date} instances and primitive arrays are cloned, reference
+   * arrays are deeply cloned. {@link java.util.Collection} and
+   * {@link java.util.Map} types are cloned by instantiating a collection/map of
+   * the same type via no-arg constructor and filling it using
+   * {@code add()/put()}. Other types are cloned recursively as beans appliying
+   * the same rules to their properties.
    */
   public static <E> E cloneOf(E bean) {
     return cloneInternally(bean, new IdentityHashMap<>());
