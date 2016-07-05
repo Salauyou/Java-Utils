@@ -106,7 +106,7 @@ public class BeanHelper {
       visited.put(source, copy);
       if (Collection.class.isAssignableFrom(clazz)) {
         Collection<Object> c = (Collection<Object>) copy;
-        ((Collection<Object>) source).forEach(e 
+        ((Collection<?>) source).forEach(e 
             -> c.add(cloneInternally(e, visited)));
       } else if (Map.class.isAssignableFrom(clazz)) {
         Map<Object, Object> m = (Map<Object, Object>) copy;
