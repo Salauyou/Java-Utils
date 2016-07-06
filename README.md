@@ -29,9 +29,9 @@ faster implementation, but doesn't yet support reentrancy and read locks
 utility to work with beans. Now, it has only one method `BeanHelper.cloneOf()` 
 which deeply clones a bean with nested hirerarchy without using serialization.
 Nested maps and collections are deeply cloned, proxied properties are resolved 
-to original classes (now, JDK, Javassist, Spring and CGLIB proxies are handled), 
-which allows to easy and safely clone beans with proxied properties and 
-collections, e. g. entity beans produced by Hibernate with Javassist. 
+to original types (now are handled JDK, Javassist, Spring and CGLIB proxies), 
+which allows to easily and safely clone beans that are proxied or have proxied 
+properties/collections, such as entity beans produced by Hibernate.
 
 --
 [`EntityMapper`](src/main/java/ru/salauyou/util/mapper/EntityMapper.java) — 
