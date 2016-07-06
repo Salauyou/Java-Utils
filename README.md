@@ -25,6 +25,15 @@ try {
 faster implementation, but doesn't yet support reentrancy and read locks
 
 --
+[`BeanHelper`](src/main/java/ru/salauyou/util/misc/BeanHelper.java) — 
+utility to work with beans. Now, it has only one method `BeanHelper.cloneOf()` 
+which deeply clones a bean with nested hirerarchy without using serialization.
+Nested maps and collections are deeply cloned, proxied properties are resolved 
+to original classes (now, JDK, Javassist, Spring and CGLIB proxies are handled), 
+which allows to easy and safely clone beans with proxied properties and 
+collections, e. g. entity beans produced by Hibernate with Javassist. 
+
+--
 [`EntityMapper`](src/main/java/ru/salauyou/util/mapper/EntityMapper.java) — 
 utility to simplify converting from one object (document, CSV line, java object etc) 
 to some java bean which may have deep nested hierarchy. Mappings are defined
@@ -32,11 +41,6 @@ as elementary "mappers" (lambdas which extract scalar properties from the source
 object) mapped to bean-style properties of destination class 
 (they are accessed by correspondent setters behind the scenes).
 Simple example of usage: [`TestMapper.java`](src/test/java/tests/mapper/TestMapper.java).
-
---
-[`BeanHelper`](src/main/java/ru/salauyou/util/misc/BeanHelper.java) — 
-utility to work with beans. Now, it has only one method `BeahHelper.cloneOf()` 
-which deeply clones a bean with nested hirerarchy without using serialization.
 
 --
 [`MinMaxHeapDeque`](src/main/java/ru/salauyou/util/collect/MinMaxHeapDeque.java) — 

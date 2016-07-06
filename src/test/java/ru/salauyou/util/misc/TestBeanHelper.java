@@ -7,6 +7,7 @@ import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 
+import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -23,6 +24,9 @@ import helpers.Model.ForeignBank;
 import helpers.Model.LocalBank;
 import helpers.Model.Payment;
 import helpers.Model.Subject;
+import javassist.util.proxy.MethodHandler;
+import javassist.util.proxy.Proxy;
+import javassist.util.proxy.ProxyFactory;
 
 public class TestBeanHelper {
 
@@ -124,8 +128,7 @@ public class TestBeanHelper {
     assertEquals(0, copy.getList().size());
     
     b = new NonTrivialBean();
-    b.setList(new ArrayList<>());
-    b.getList().addAll(Arrays.asList(null, b, null)); // circular dependency
+    b.setList(Arrays.asList(null, b, null)); // circular dependency
     
     copy = BeanHelper.cloneOf(b);
     assertNotSame(b, copy);
@@ -165,8 +168,45 @@ public class TestBeanHelper {
   public void testCloneBeanWithMap() {}
   
   
+  @Test
+  public void testCloneProxiedBean() {
+    NonTrivialBean b = NonTrivialBeanProxy.create();
+    b.setId(-1L);
+    NonTrivialBean b1 = NonTrivialBeanProxy.create();
+    b1.setId(1L);
+    NonTrivialBean b2 = NonTrivialBeanProxy.create();
+    b2.setId(2L);
+    b.setList(Arrays.asList(b1, b2));
+    
+    NonTrivialBean copy = BeanHelper.cloneOf(b);
+    
+    assertNotSame(b, copy);
+    assertSame(NonTrivialBean.class, copy.getClass());
+    assertEquals(-1L, copy.getId());
+    assertNotSame(b.getList(), copy.getList());
+    assertEquals(2, copy.getList().size());
+    assertSame(NonTrivialBean.class, copy.getList().get(0).getClass());
+    assertEquals(1L, copy.getList().get(0).getId());
+    assertSame(NonTrivialBean.class, copy.getList().get(1).getClass());
+    assertEquals(2L, copy.getList().get(1).getId());
+  }
+ 
   
-
+  @Test
+  public void testCloneJavassistProxiedBean() throws ReflectiveOperationException {
+    NonTrivialBean b = newJavassistProxy();
+    b.setName("proxy-root");
+    NonTrivialBean b1 = newJavassistProxy();
+    b1.setName("proxy-child");
+    b.setList(Arrays.asList(b, b1));
+    
+    NonTrivialBean copy = BeanHelper.cloneOf(b);
+    
+    assertNotSame(b, copy);
+    assertSame(NonTrivialBean.class, copy.getClass());
+    
+  }
+  
   
   static class NonTrivialBean {
     
@@ -242,6 +282,38 @@ public class TestBeanHelper {
     public void setDate(Date date) {
       this.date = date;
     }
+  }
+  
+  
+  // proxy without default constructor
+  static class NonTrivialBeanProxy extends NonTrivialBean {
+
+    private NonTrivialBeanProxy() {}
+    
+    static public NonTrivialBeanProxy create() {
+      return new NonTrivialBeanProxy();
+    }
+  }
+  
+  
+  
+  
+  
+  static NonTrivialBean newJavassistProxy() 
+          throws InstantiationException, IllegalAccessException {
+    ProxyFactory f = new ProxyFactory();
+    f.setSuperclass(NonTrivialBean.class);
+    Class<?> c = f.createClass();
+    MethodHandler mi = new MethodHandler() {
+      // delegate to source methods
+      public Object invoke(Object self, Method m, Method proceed, 
+          Object[] args) throws Throwable {
+        return proceed.invoke(self, args);
+      }
+    };
+    NonTrivialBean b = (NonTrivialBean) c.newInstance();
+    ((Proxy) b).setHandler(mi);
+    return b;
   }
   
   

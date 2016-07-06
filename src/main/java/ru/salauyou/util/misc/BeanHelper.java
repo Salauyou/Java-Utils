@@ -4,6 +4,7 @@ import java.beans.IntrospectionException;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Array;
+import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.time.Duration;
@@ -19,12 +20,15 @@ import java.time.Year;
 import java.time.YearMonth;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -39,20 +43,24 @@ public class BeanHelper {
   /**
    * Creates a deep clone of given bean.
    * <p>
-   * This method tries to create a new bean of the same type using default
-   * no-arg constructor, then take each property accessible by public
-   * {@code getXxx()} getter method, clone it if necessary, and set to a target
-   * bean using corresponding {@code setXxx()} setter, or, if a property is of
-   * collection type and does not have direct setter, using
-   * {@code getXxx().addAll()}.
+   * This method tries to create a new bean of the same runtime class (or, if
+   * runtime class is detected as proxy or has no accessible no-arg constructor,
+   * is used the closest non-proxy superclass with accessible no-arg
+   * constructor), then take each property by accessible {@code getXxx()}
+   * getter, clone it if necessary, and set to a target bean using corresponding
+   * {@code setXxx()} setter, or, if a property is of collection type and does
+   * not have direct setter, using {@code getXxx().addAll()}.
    * <p>
    * Primitive types and wrappers, enum types, {@link java.lang.String} and
    * {@link java.time} immutable instances are copied directly.
    * {@link java.util.Date} instances are cloned, arrays are cloned,
    * {@link java.util.Collection} and {@link java.util.Map} types are cloned by
-   * instantiating a collection/map of the same type via no-arg constructor and
-   * filling it using {@code add()/put()}. Other types are cloned recursively as
-   * beans appliying the same rules to their properties.
+   * instantiating a collection/map of the same type via no-arg constructor (or,
+   * if such constructor is not available, it is looked-up among superclasses;
+   * finally one of empty {@link java.util.ArrayList}, {@link java.util.HashSet}
+   * or {@link java.util.HashMap} is created) and filling it using
+   * {@code add()/put()}. Other types are cloned recursively as beans appliying
+   * the same rules to their properties.
    */
   public static <E> E cloneOf(E bean) {
     return cloneInternally(bean, new IdentityHashMap<>());
@@ -102,7 +110,8 @@ public class BeanHelper {
       return (E) copy;
     } 
     try {
-      Object copy = clazz.newInstance();
+      Object copy = tryInstantiate(clazz);
+      clazz = copy.getClass();
       visited.put(source, copy);
       if (Collection.class.isAssignableFrom(clazz)) {
         Collection<Object> c = (Collection<Object>) copy;
@@ -147,7 +156,75 @@ public class BeanHelper {
     }
   }
 
+  
+  static Object tryInstantiate(final Class<?> clazz) throws InstantiationException {
+    Class<?> cl = clazz;
+    while (cl != Object.class) {
+      if (!isProxy(cl)) {
+        try {
+          return cl.newInstance();
+        } catch (ReflectiveOperationException goNext) {}
+      }
+      cl = cl.getSuperclass();
+    }
+    if (Set.class.isAssignableFrom(clazz)) {
+      return new HashSet<>();
+    } else if (Map.class.isAssignableFrom(clazz)) {
+      return new HashMap<>();
+    } else if (Collection.class.isAssignableFrom(clazz)) {
+      return new ArrayList<>();
+    }
+    throw new InstantiationException(String.format(
+        "Cannot find no-arg constructor in class %s or any its superclasses", 
+        clazz.getCanonicalName()));
+  }
+  
+  
+  static final List<Method> PROXY_TESTERS = new ArrayList<>();
+  static Class<?> SPRING_PROXY = null;
+  
+  static {
+    try {
+      SPRING_PROXY = Class.forName("org.springframework.aop.SpringProxy");
+    } catch (ReflectiveOperationException | SecurityException ignored) {}
+    try {
+      PROXY_TESTERS.add(Class.forName("java.lang.reflect.Proxy")
+          .getMethod("isProxyClass", Class.class));
+    } catch (ReflectiveOperationException | SecurityException ignored) {}
+    try {
+      PROXY_TESTERS.add(Class.forName("javassist.util.proxy.ProxyFactory")
+          .getMethod("isProxyClass", Class.class));
+    } catch (ReflectiveOperationException | SecurityException ignored) {}
+    try {
+      PROXY_TESTERS.add(Class.forName("net.sf.cglib.proxy.Proxy")
+          .getMethod("isProxyClass", Class.class));
+    } catch (ReflectiveOperationException | SecurityException ignored) {}
+  }
+  
+  
+  static final Set<Class<?>> NOT_PROXY 
+      = Collections.newSetFromMap(new ConcurrentHashMap<>());
+  
+  
+  static boolean isProxy(Class<?> clazz) {
+    if (NOT_PROXY.contains(clazz)) {
+      return false;
+    }
+    for (Method m : PROXY_TESTERS) {
+      try {
+        if ((boolean) m.invoke(null, clazz)) {
+          return true;
+        }
+      } catch (Exception e) {}
+    }
+    if (SPRING_PROXY != null && SPRING_PROXY.isAssignableFrom(clazz)) {
+      return true;
+    }
+    NOT_PROXY.add(clazz);
+    return false;
+  }
 
+  
   private BeanHelper() {};
 
 }
