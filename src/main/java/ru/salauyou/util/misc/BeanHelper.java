@@ -187,6 +187,10 @@ public class BeanHelper {
       SPRING_PROXY = Class.forName("org.springframework.aop.SpringProxy");
     } catch (ReflectiveOperationException | SecurityException ignored) {}
     try {
+      PROXY_TESTERS.add(Class.forName("org.springframework.util.ClassUtils")
+          .getMethod("isCglibProxyClass", Class.class));
+    } catch (ReflectiveOperationException | SecurityException ignored) {}
+    try {
       PROXY_TESTERS.add(Class.forName("java.lang.reflect.Proxy")
           .getMethod("isProxyClass", Class.class));
     } catch (ReflectiveOperationException | SecurityException ignored) {}
