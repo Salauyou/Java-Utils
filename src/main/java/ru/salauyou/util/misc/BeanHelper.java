@@ -183,25 +183,19 @@ public class BeanHelper {
   static Class<?> SPRING_PROXY = null;
   
   static {
-    try {
-      SPRING_PROXY = Class.forName("org.springframework.aop.SpringProxy");
-    } catch (ReflectiveOperationException | SecurityException ignored) {}
-    try {
-      PROXY_TESTERS.add(Class.forName("org.springframework.util.ClassUtils")
-          .getMethod("isCglibProxyClass", Class.class));
-    } catch (ReflectiveOperationException | SecurityException ignored) {}
-    try {
-      PROXY_TESTERS.add(Class.forName("java.lang.reflect.Proxy")
-          .getMethod("isProxyClass", Class.class));
-    } catch (ReflectiveOperationException | SecurityException ignored) {}
-    try {
-      PROXY_TESTERS.add(Class.forName("javassist.util.proxy.ProxyFactory")
-          .getMethod("isProxyClass", Class.class));
-    } catch (ReflectiveOperationException | SecurityException ignored) {}
-    try {
-      PROXY_TESTERS.add(Class.forName("net.sf.cglib.proxy.Proxy")
-          .getMethod("isProxyClass", Class.class));
-    } catch (ReflectiveOperationException | SecurityException ignored) {}
+    for (String method : Arrays.asList(
+          "org.springframework.util.ClassUtils#isCglibProxyClass",
+          "java.lang.reflect.Proxy#isProxyClass",
+          "javassist.util.proxy.ProxyFactory#isProxyClass",
+          "net.sf.cglib.proxy.Proxy#isProxyClass")) {
+      String[] ms = method.split("#");
+      try {
+        PROXY_TESTERS.add(Class.forName(ms[0]).getMethod(ms[1], Class.class));
+      } catch (ReflectiveOperationException | SecurityException ignored) {}
+      try {
+        SPRING_PROXY = Class.forName("org.springframework.aop.SpringProxy");
+      } catch (ReflectiveOperationException | SecurityException ignored) {}
+    }
   }
   
   
