@@ -29,7 +29,7 @@ using serialization, handling nested maps and collections and proxied properties
 (JDK, Javassist, Spring and CGLIB proxies);
 
 `BeanHelper.resolveTypeArguments()` — utility to resolve actual type arguments
-that given type defines for given generic supertype directly or indirectly
+that given type defines for given generic supertype directly or indirectly (in supertypes)
 
 [`EntityMapper`](src/main/java/ru/salauyou/util/mapper/EntityMapper.java) — 
 utility to simplify converting from one object (document, CSV line, java object etc) 
