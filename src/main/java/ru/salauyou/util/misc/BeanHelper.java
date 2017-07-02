@@ -250,80 +250,47 @@ public class BeanHelper {
           "Source is not supertype of target");
     }
     
-    // source is not a generic type
-    if (source.getTypeParameters().length == 0) {
-      return Collections.emptyList();
-    }
+    // index tracking resolved args by type variable
+    Map<Type, Class<?>> index = new HashMap<>();
     
-    // Build inheritance chain from `source` to 
-    // `target` -- in order to handle type parameters 
-    // defined in `source` subtypes
+    // Walk from `target` to `source` by inheritance
+    // chain, mapping resolved args to variables
     Type type = target;
-    List<ParameterizedType> types = new ArrayList<>();
     next: while (type != null) {
       if (type instanceof ParameterizedType) {
         ParameterizedType t = (ParameterizedType) type;
-        types.add(t);
+        Type[] args = t.getActualTypeArguments();
+        Type[] vars = adjustClass(t).getTypeParameters();
+        for (int i = 0; i < args.length; ++i) {
+          Type var = vars[i];
+          Type arg = args[i];
+          if (arg instanceof TypeVariable) {
+            // variable arg may point to actual arg 
+            // resolved before - try to remap
+            arg = index.remove(arg);
+          }
+          if (arg instanceof Class) {
+            index.put(var, (Class<?>) arg);
+          }
+        }
       }
-      Class<?> cl = adjustClass(type);
-      if (cl == source) {
+      Class<?> c = adjustClass(type);
+      if (c == source) {
         break;
       }
-      for (Type t : cl.getGenericInterfaces()) {
+      for (Type t : c.getGenericInterfaces()) {
         if (source.isAssignableFrom(adjustClass(t))) {
           type = t;
           continue next;
         }
       } 
-      type = cl.getGenericSuperclass();
-    }
-    Collections.reverse(types);
-    
-    // Perform argument resolution
-    Type[] resolved = null;
-    
-    // index tracking current positions 
-    // of type variables in result array
-    Map<String, Integer> varIndex = new HashMap<>();
-    
-    for (Type t : types) {
-      Type[] args = ((ParameterizedType) t).getActualTypeArguments();
-      
-      // initialize result array and index
-      if (resolved == null) {
-        resolved = args;
-        for (int i = 0; i < args.length; ++i) {
-          if (args[i] instanceof TypeVariable) {
-            varIndex.put(((TypeVariable<?>) args[i]).getName(), i);
-          }
-        }
-        continue;
-      }
-      
-      // process next subtype
-      TypeVariable<?>[] vars = adjustClass(t).getTypeParameters();
-      for (int i = 0; i < args.length; ++i) {
-        t = args[i];
-        Integer pos = varIndex.remove(vars[i].getName());
-        
-        // variable declared in `source`?
-        if (pos != null) {          
-          resolved[pos] = t;
-          if (t instanceof TypeVariable) {
-            varIndex.put(((TypeVariable<?>) t).getName(), pos);
-          }
-        }
-      }
+      type = c.getGenericSuperclass();
     }
     
-    // Prepare result
-    if (resolved == null) {
-      return Collections.nCopies(
-          source.getTypeParameters().length, null);
-    }
+    // Prepare result: just take args from index
     List<Class<?>> result = new ArrayList<>();
-    for (Type t : resolved) {
-      result.add(t instanceof Class ? (Class<?>) t : null);
+    for (Type var : source.getTypeParameters()) {
+      result.add(index.get(var));
     }
     return result;
   }
