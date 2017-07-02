@@ -29,7 +29,8 @@ using serialization, handling nested maps and collections and proxied properties
 (JDK, Javassist, Spring and CGLIB proxies);
 
 `BeanHelper.resolveTypeArguments()` — utility to resolve actual type arguments
-that given type defines for given generic supertype directly or indirectly (in supertypes)
+that given type defines for given generic supertype directly or indirectly (in supertypes).
+[Examples](src/test/java/ru/salauyou/util/misc/TestExtractGenericTypes.java)
 
 [`EntityMapper`](src/main/java/ru/salauyou/util/mapper/EntityMapper.java) — 
 utility to simplify converting from one object (document, CSV line, java object etc) 
@@ -37,7 +38,7 @@ to some java bean which may have deep nested hierarchy. Mappings are defined
 as elementary "mappers" (lambdas which extract scalar properties from the source
 object) mapped to bean-style properties of destination class 
 (they are accessed by correspondent setters behind the scenes).
-Simple example of usage: [`TestMapper.java`](src/test/java/tests/mapper/TestMapper.java).
+[Examples](https://github.com/Salauyou/Java-Utils/tree/master/src/test/java/ru/salauyou/util/mapper).
 
 [`MinMaxHeapDeque`](src/main/java/ru/salauyou/util/collect/MinMaxHeapDeque.java) — 
 double-ended priority queue based on [min-max heap](https://en.wikipedia.org/wiki/Min-max_heap). 
