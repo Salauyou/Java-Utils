@@ -5,6 +5,9 @@ import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Array;
 import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.lang.reflect.TypeVariable;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.time.Duration;
@@ -221,6 +224,118 @@ public class BeanHelper {
     return false;
   }
 
+  
+  
+  /**
+   * Resolves actual type arguments that {@code target} 
+   * type and its supertypes define when they implement/extend
+   * {@code source} generic type. 
+   * <p>
+   * Due to Java reflection restrictions, this method cannot 
+   * resolve types for classes that directly extend generic 
+   * class, e.g. {@code new ArrayList<String>().getClass()}
+   * 
+   * @param target target class
+   * @param source generic class or interface
+   * 
+   * @return resolved arguments in order as defined in 
+   *     {@code source} generic class. Unresolved arguments 
+   *     are returned as nulls.
+   */
+  static List<Class<?>> resolveTypeArguments(
+      Class<?> target, Class<?> source) {
+   
+    if (!source.isAssignableFrom(target)) {  
+      throw new IllegalArgumentException(
+          "Source is not supertype of target");
+    }
+    
+    // source is not a generic type
+    if (source.getTypeParameters().length == 0) {
+      return Collections.emptyList();
+    }
+    
+    // Build inheritance chain from `source` to 
+    // `target` -- in order to handle type parameters 
+    // defined in `source` subtypes
+    Type type = target;
+    List<ParameterizedType> types = new ArrayList<>();
+    next: while (type != null) {
+      if (type instanceof ParameterizedType) {
+        ParameterizedType t = (ParameterizedType) type;
+        types.add(t);
+      }
+      Class<?> cl = adjustClass(type);
+      if (cl == source) {
+        break;
+      }
+      for (Type t : cl.getGenericInterfaces()) {
+        if (source.isAssignableFrom(adjustClass(t))) {
+          type = t;
+          continue next;
+        }
+      } 
+      type = cl.getGenericSuperclass();
+    }
+    Collections.reverse(types);
+    
+    // Perform argument resolution
+    Type[] resolved = null;
+    
+    // index tracking current positions 
+    // of type variables in result array
+    Map<String, Integer> varIndex = new HashMap<>();
+    
+    for (Type t : types) {
+      Type[] args = ((ParameterizedType) t).getActualTypeArguments();
+      
+      // initialize result array and index
+      if (resolved == null) {
+        resolved = args;
+        for (int i = 0; i < args.length; ++i) {
+          if (args[i] instanceof TypeVariable) {
+            varIndex.put(((TypeVariable<?>) args[i]).getName(), i);
+          }
+        }
+        continue;
+      }
+      
+      // process next subtype
+      TypeVariable<?>[] vars = adjustClass(t).getTypeParameters();
+      for (int i = 0; i < args.length; ++i) {
+        t = args[i];
+        Integer pos = varIndex.remove(vars[i].getName());
+        
+        // variable declared in `source`?
+        if (pos != null) {          
+          resolved[pos] = t;
+          if (t instanceof TypeVariable) {
+            varIndex.put(((TypeVariable<?>) t).getName(), pos);
+          }
+        }
+      }
+    }
+    
+    // Prepare result
+    if (resolved == null) {
+      return Collections.nCopies(
+          source.getTypeParameters().length, null);
+    }
+    List<Class<?>> result = new ArrayList<>();
+    for (Type t : resolved) {
+      result.add(t instanceof Class ? (Class<?>) t : null);
+    }
+    return result;
+  }
+  
+  
+  static Class<?> adjustClass(Type t) {
+    if (t instanceof ParameterizedType) {
+      t = ((ParameterizedType) t).getRawType();
+    } 
+    return (Class<?>) t;
+  }
+  
   
   private BeanHelper() {};
 
