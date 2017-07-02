@@ -94,11 +94,31 @@ public class TestExtractGenericTypes {
     
     // three-parameter type, mixed order + additional parameters
     exp = Arrays.asList(String.class, Long.class, Integer.class);
-    target = new TripleAbc() {}.getClass();
+    target = TripleAbc.class;
     assertEquals(exp, BeanHelper.resolveTypeArguments(target, Triple.class));
     
     exp = Arrays.asList(Integer.class, String.class);
     assertEquals(exp, BeanHelper.resolveTypeArguments(target, TripleB.class));
+  }
+  
+  
+  @Test
+  @SuppressWarnings("rawtypes")
+  public void testSpecialCases() {
+    
+    // raw type
+    exp = Arrays.asList(null, null, null);
+    target = new Triple() {}.getClass();
+    assertEquals(exp, BeanHelper.resolveTypeArguments(target, Triple.class));
+    
+    // partially raw
+    exp = Arrays.asList(null, Long.class, Integer.class);
+    target = TripleBc.class;
+    assertEquals(exp, BeanHelper.resolveTypeArguments(target, Triple.class));
+    
+    // non-generic supertype
+    exp = Collections.emptyList();
+    assertEquals(exp, BeanHelper.resolveTypeArguments(target, Object.class));
   }
   
   

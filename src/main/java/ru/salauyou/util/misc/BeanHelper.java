@@ -247,12 +247,17 @@ public class BeanHelper {
    
     if (!source.isAssignableFrom(target)) {  
       throw new IllegalArgumentException(
-          "source is not supertype of target");
+          "Source is not supertype of target");
     }
     
-    // Build inheritance chain from `source` to
+    // source is not a generic type
+    if (source.getTypeParameters().length == 0) {
+      return Collections.emptyList();
+    }
+    
+    // Build inheritance chain from `source` to 
     // `target` -- in order to handle type parameters 
-    // defined in intermediate types
+    // defined in `source` subtypes
     Type type = target;
     List<ParameterizedType> types = new ArrayList<>();
     next: while (type != null) {
@@ -261,16 +266,12 @@ public class BeanHelper {
         types.add(t);
       }
       Class<?> cl = adjustClass(type);
+      if (cl == source) {
+        break;
+      }
       for (Type t : cl.getGenericInterfaces()) {
-        Class<?> c = adjustClass(t);
-        if (source.isAssignableFrom(c)) {
-          if (t instanceof ParameterizedType) {
-            types.add((ParameterizedType) t);
-          }
-          if (c == source) {
-            break next;
-          }
-          type = c;
+        if (source.isAssignableFrom(adjustClass(t))) {
+          type = t;
           continue next;
         }
       } 
@@ -315,7 +316,11 @@ public class BeanHelper {
       }
     }
     
-    // Collect result
+    // Prepare result
+    if (resolved == null) {
+      return Collections.nCopies(
+          source.getTypeParameters().length, null);
+    }
     List<Class<?>> result = new ArrayList<>();
     for (Type t : resolved) {
       result.add(t instanceof Class ? (Class<?>) t : null);
