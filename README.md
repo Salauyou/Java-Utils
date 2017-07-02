@@ -3,7 +3,12 @@ Java utils
 
 Some useful utilities I use in Java projects.
 
-**LockKeeper** - hash-based segment locking implementation. Allows to acquire one composite lock for multiple objects atomically. It is ***insensitive to order*** (order of objects passed doesn't need to be defined), ***fair*** (threads that wait most are first candidates to acquire locks), implements ***all-or-none*** strategy (which allows a waiter thread continue as soon as all locks that it needs become available) and supports ***exclusive*** (write) as well as ***shared*** (read) locks.
+[`LockKeeper`](src/main/java/ru/salauyou/util/concurrent/LockKeeper.java) — 
+hash-based stripe locker allowing to acquire one composite lock 
+for multiple objects by single operation. It is ***insensitive to order*** 
+(objects can be passed in any order), ***fair***, implements 
+***all-or-nothing*** strategy. Are supported ***exclusive*** (write) as well 
+as ***shared*** (read) locks.
 
 <pre>
 Lock lock = lockKeeper.lockAndGet(o1, o2, o3); // blocks until locks for all 
@@ -14,14 +19,33 @@ try {
     lock.unlock();                             // releases locks for all o1, o2 and o3
 }</pre>
 
-**ExpirableMap** - Thread-safe `Map<K, V>` decorator, where every entry has specified expiration time 
-which is measured from the moment the entry was put to the map. Clean-up of expired elements is performed automatically 
-on every write/read invocation, so it is guaranteed that no expired entries will be returned by `get(key)` method.
-Expiration management is implemented based on internal `LinkedList` and don't utilize any additional threads.
+[`LockKeeperV2`](src/main/java/ru/salauyou/util/concurrent/LockKeeperV2.java) — 
+faster implementation, but doesn't yet support reentrancy and read locks
 
-**KCombinationIterator** - `Iterator` that sequentially returns all <a href="http://en.wikipedia.org/wiki/Combination">k-combinations</a> from given `Collection<T>`
+[`BeanHelper`](src/main/java/ru/salauyou/util/misc/BeanHelper.java):
 
-**Point**, **GeoPoint** immutable classes present points in 2d cartesian and geo coordinates, 
-**GeoProjections** class purpose is to convert such points one to another using some projection model. 
+`BeanHelper.cloneOf()` — utility to deeply clone a bean with nested hirerarchy without 
+using serialization, handling nested maps and collections and proxied properties 
+(JDK, Javassist, Spring and CGLIB proxies);
 
-**GeoCalculations** - class to perform trilateration in geo coordinates.
+`BeanHelper.resolveTypeArguments()` — utility to resolve actual type arguments
+that given type defines for given generic supertype directly or indirectly (in supertypes).
+[Examples](src/test/java/ru/salauyou/util/misc/TestExtractGenericTypes.java)
+
+[`EntityMapper`](src/main/java/ru/salauyou/util/mapper/EntityMapper.java) — 
+utility to simplify converting from one object (document, CSV line, java object etc) 
+to some java bean which may have deep nested hierarchy. Mappings are defined
+as elementary "mappers" (lambdas which extract scalar properties from the source
+object) mapped to bean-style properties of destination class 
+(they are accessed by correspondent setters behind the scenes).
+[Examples](https://github.com/Salauyou/Java-Utils/tree/master/src/test/java/ru/salauyou/util/mapper).
+
+[`MinMaxHeapDeque`](src/main/java/ru/salauyou/util/collect/MinMaxHeapDeque.java) — 
+double-ended priority queue based on [min-max heap](https://en.wikipedia.org/wiki/Min-max_heap). 
+Unlike Guava's [`MinMaxPriorityQueue`]
+(https://google.github.io/guava/releases/snapshot/api/docs/com/google/common/collect/MinMaxPriorityQueue.html),
+it fully implements `Deque` interface.
+
+[`KCombinationIterator`](src/main/java/ru/salauyou/util/misc/KCombinationIterator.java) — 
+iterator over <a href="http://en.wikipedia.org/wiki/Combination">k-combinations</a> 
+of a given `Collection<T>`
